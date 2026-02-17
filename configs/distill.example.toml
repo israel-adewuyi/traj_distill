@@ -1,0 +1,13 @@
+input_glob = "data/**/*.json"
+output_dir = "distilled"
+prompt_file = "configs/distill.prompt.example.txt"
+model = "Qwen/Qwen2.5-3B-Instruct"
+token_cap = 256
+overwrite = false
+continue_on_error = true
+retry_count = 1
+max_compression_passes = 2
+
+[options]
+temperature = 0.0
+max_tokens = 512

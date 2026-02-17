@@ -21,6 +21,20 @@ class RequestConfig:
     options: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class DistillConfig:
+    input_glob: str
+    output_dir: Path
+    prompt_file: Path
+    model: str
+    token_cap: int
+    options: dict[str, Any] = field(default_factory=dict)
+    overwrite: bool = False
+    continue_on_error: bool = True
+    retry_count: int = 1
+    max_compression_passes: int = 2
+
+
 def _read_toml(path: Path) -> dict[str, Any]:
     with path.open("rb") as handle:
         return tomllib.load(handle)
@@ -81,4 +95,69 @@ def load_request_config(path: Path) -> RequestConfig:
         raise ValueError("`options` must be a table when provided.")
 
     return RequestConfig(model=model, messages=messages, options=options)
+
+
+def load_distill_config(path: Path) -> DistillConfig:
+    data = _read_toml(path)
+    base_dir = path.parent.resolve()
+
+    input_glob = str(data.get("input_glob", "")).strip()
+    if not input_glob:
+        raise ValueError("distill config must define `input_glob`.")
+    input_glob_path = Path(input_glob)
+    if not input_glob_path.is_absolute():
+        input_glob = str((base_dir / input_glob).resolve())
+
+    output_dir_raw = str(data.get("output_dir", "")).strip()
+    if not output_dir_raw:
+        raise ValueError("distill config must define `output_dir`.")
+    output_dir = Path(output_dir_raw)
+    if not output_dir.is_absolute():
+        output_dir = (base_dir / output_dir).resolve()
+
+    prompt_file_raw = str(data.get("prompt_file", "")).strip()
+    if not prompt_file_raw:
+        raise ValueError("distill config must define `prompt_file`.")
+    prompt_file = Path(prompt_file_raw)
+    if not prompt_file.is_absolute():
+        prompt_file = (base_dir / prompt_file).resolve()
+    if not prompt_file.is_file():
+        raise ValueError(f"prompt file was not found: {prompt_file}")
+
+    model = str(data.get("model", "")).strip()
+    if not model:
+        raise ValueError("distill config must define `model`.")
+
+    token_cap = int(data.get("token_cap", 0))
+    if token_cap <= 0:
+        raise ValueError("`token_cap` must be a positive integer.")
+
+    options = data.get("options", {})
+    if options is None:
+        options = {}
+    if not isinstance(options, dict):
+        raise ValueError("`options` must be a table when provided.")
+
+    overwrite = bool(data.get("overwrite", False))
+    continue_on_error = bool(data.get("continue_on_error", True))
+    retry_count = int(data.get("retry_count", 1))
+    if retry_count < 0:
+        raise ValueError("`retry_count` must be >= 0.")
+
+    max_compression_passes = int(data.get("max_compression_passes", 2))
+    if max_compression_passes < 1:
+        raise ValueError("`max_compression_passes` must be >= 1.")
+
+    return DistillConfig(
+        input_glob=input_glob,
+        output_dir=output_dir,
+        prompt_file=prompt_file,
+        model=model,
+        token_cap=token_cap,
+        options=options,
+        overwrite=overwrite,
+        continue_on_error=continue_on_error,
+        retry_count=retry_count,
+        max_compression_passes=max_compression_passes,
+    )
 

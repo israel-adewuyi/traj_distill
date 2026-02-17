@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 traj-distill-chat = "traj_distill.chat:main"
+traj-distill-run = "traj_distill.distill:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/traj_distill"]

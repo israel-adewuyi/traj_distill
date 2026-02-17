@@ -1,11 +1,10 @@
-<<<<<<< HEAD
-# traj_distill
-=======
 # traj_distill
 
-Minimal scaffold for sending chat messages to a vLLM server and getting the response back.
+Minimal scaffold for:
+- sending one chat request to a vLLM OpenAI-compatible server, and
+- batch-distilling trajectory `messages` from `.json` files.
 
-## Run
+## Run One Chat Request
 
 1. Start a vLLM OpenAI-compatible server (example):
 
@@ -29,4 +28,23 @@ uv run traj-distill-chat \
   --request-config configs/request.example.toml \
   --raw
 ```
->>>>>>> b0793be (initial commit)
+
+## Batch Distill JSON Trajectories
+
+1. Create/update:
+- `configs/server.toml` (based on `configs/server.example.toml`)
+- `configs/distill.toml` (based on `configs/distill.example.toml`)
+- your prompt file referenced by `prompt_file` in `distill.toml`
+
+2. Run batch distillation:
+
+```bash
+uv run traj-distill-run \
+  --server-config configs/server.toml \
+  --distill-config configs/distill.toml
+```
+
+Useful flags:
+- `--dry-run` validates/processes without writing output files.
+- `--overwrite` overwrites existing output files.
+- `--fail-fast` stops on the first failing file.
