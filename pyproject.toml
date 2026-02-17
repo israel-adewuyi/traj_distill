@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "traj-distill"
+version = "0.1.0"
+description = "Minimal trajectory distillation scaffold with a vLLM request loop"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+traj-distill-chat = "traj_distill.chat:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/traj_distill"]
+
+[tool.uv]
+package = true

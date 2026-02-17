@@ -1,0 +1,24 @@
+Implemented a minimal `uv`-based scaffold that sends messages to a vLLM server and prints the returned assistant message, fully configured via `.toml` files.
+
+What I added
+- `pyproject.toml` with `uv`/package setup and CLI entrypoint `traj-distill-chat`
+- `src/traj_distill/config.py` for TOML config loading/validation
+- `src/traj_distill/client.py` for OpenAI-compatible `POST /v1/chat/completions`
+- `src/traj_distill/chat.py` CLI runner:
+  - `--server-config <.toml>`
+  - `--request-config <.toml>`
+  - `--raw` to print full JSON
+- `configs/server.example.toml`
+- `configs/request.example.toml`
+- `README.md` with run instructions
+- `.gitignore` for `.venv` and Python cache files
+
+Run
+uv run traj-distill-chat \
+  --server-config configs/server.example.toml \
+  --request-config configs/request.example.toml
+
+Validation run results
+- `uv run python -m traj_distill.chat --help` works.
+- `uv run traj-distill-chat ...` correctly attempted the request and failed with connection refused because no vLLM server was running at `127.0.0.1:8000`.
+- `python3 -m compileall src` succeeded.
