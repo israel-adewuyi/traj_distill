@@ -8,7 +8,9 @@ version = "0.1.0"
 description = "Minimal trajectory distillation scaffold with a vLLM request loop"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "vllm>=0.15.1",
+]
 
 [project.scripts]
 traj-distill-chat = "traj_distill.chat:main"
