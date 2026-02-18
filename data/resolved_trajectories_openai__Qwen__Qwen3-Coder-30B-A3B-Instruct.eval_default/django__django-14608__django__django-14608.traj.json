@@ -1,0 +1,1077 @@
+{
+  "info": {
+    "exit_status": "Submitted",
+    "submission": "diff --git a/django/forms/formsets.py b/django/forms/formsets.py\nindex a89c35599f..1b0d4554e0 100644\n--- a/django/forms/formsets.py\n+++ b/django/forms/formsets.py\n@@ -333,7 +333,7 @@ class BaseFormSet:\n         self._non_form_errors.\n         \"\"\"\n         self._errors = []\n-        self._non_form_errors = self.error_class()\n+        self._non_form_errors = self.error_class(error_class='nonform')\n         empty_forms_count = 0\n \n         if not self.is_bound:  # Stop further processing.\n@@ -380,7 +380,7 @@ class BaseFormSet:\n             # Give self.clean() a chance to do cross-form validation.\n             self.clean()\n         except ValidationError as e:\n-            self._non_form_errors = self.error_class(e.error_list)\n+            self._non_form_errors = self.error_class(e.error_list, error_class='nonform')\n \n     def clean(self):\n         \"\"\"\n",
+    "model_stats": {
+      "instance_cost": 0.3887284,
+      "api_calls": 23
+    },
+    "mini_version": "1.13.2",
+    "config": {
+      "agent": {
+        "system_template": "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n",
+        "instance_template": "<pr_description>\nConsider the following PR description:\n{{task}}\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>\n",
+        "timeout_template": "The last command <command>{{action['action']}}</command> timed out and has been killed.\nThe output of the command was:\n <output>\n{{output}}\n</output>\nPlease try another command and make sure to avoid those requiring interactive input.",
+        "format_error_template": "Please always provide EXACTLY ONE action in triple backticks, found {{actions|length}} actions.\n\nPlease format your action in triple backticks as shown in <response_example>.\n\n<response_example>\nHere are some thoughts about why you want to perform the action.\n\n```bash\n<action>\n```\n</response_example>\n\nIf you have completed your assignment, please consult the first message about how to\nsubmit your solution (you will not be able to continue working on this task after that).\n",
+        "action_observation_template": "<returncode>{{output.returncode}}</returncode>\n{% if output.output | length < 10000 -%}\n<output>\n{{ output.output -}}\n</output>\n{%- else -%}\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning>\n{%- set elided_chars = output.output | length - 10000 -%}\n<output_head>\n{{ output.output[:5000] }}\n</output_head>\n<elided_chars>\n{{ elided_chars }} characters elided\n</elided_chars>\n<output_tail>\n{{ output.output[-5000:] }}\n</output_tail>\n{%- endif -%}\n",
+        "step_limit": 250,
+        "cost_limit": 3.0
+      },
+      "model": {
+        "model_name": "openai/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+        "model_kwargs": {
+          "drop_params": true,
+          "temperature": 0.0,
+          "api_key": "EMPTY"
+        },
+        "litellm_model_registry": "/root/.config/mini-swe-agent/custom_models.json"
+      },
+      "environment": {
+        "image": "docker.io/swebench/sweb.eval.x86_64.django_1776_django-14608:latest",
+        "cwd": "/testbed",
+        "env": {
+          "PAGER": "cat",
+          "MANPAGER": "cat",
+          "LESS": "-R",
+          "PIP_PROGRESS_BAR": "off",
+          "TQDM_DISABLE": "1"
+        },
+        "forward_env": [],
+        "timeout": 60,
+        "executable": "docker",
+        "run_args": [
+          "--rm"
+        ],
+        "container_timeout": "2h",
+        "pull_timeout": 120
+      },
+      "agent_type": "minisweagent.run.extra.swebench.ProgressTrackingAgent",
+      "model_type": "minisweagent.models.litellm_model.LitellmModel",
+      "environment_type": "minisweagent.environments.docker.DockerEnvironment"
+    }
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected."
+    },
+    {
+      "role": "user",
+      "content": "<pr_description>\nConsider the following PR description:\nAdd `nonform` CSS class for non form errors in FormSets\nDescription\n\t \n\t\t(last modified by Ties Jan Hefting)\n\t \nForms add the nonfield CSS class for non field errors in ErrorList instances. This is documented in a section on \u200brendering form error messages. Similarly, in FormSets I'd expect to see the nonform CSS class added for non form errors. This would allow a custom ErrorList to make a distinction in form field errors, non field errors (forms) and non form errors (FormSets) when rendering error messages. Therefore I'd suggest to add this nonform CSS class and document it for developers to use.\n\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I need to understand the codebase structure to find where FormSets and ErrorList classes are implemented. Based on the PR description, I need to locate the code that handles form errors and formset errors to add the missing \"nonform\" CSS class. Let me start by exploring the directory structure to understand how Django's forms and formsets are organized.\n\n```bash\nfind . -name \"*.py\" | grep -E \"(form|error)\" | head -20\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-df506c4cfe68413999b0ab3d153dae49",
+          "created": 1760293514,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I need to understand the codebase structure to find where FormSets and ErrorList classes are implemented. Based on the PR description, I need to locate the code that handles form errors and formset errors to add the missing \"nonform\" CSS class. Let me start by exploring the directory structure to understand how Django's forms and formsets are organized.\n\n```bash\nfind . -name \"*.py\" | grep -E \"(form|error)\" | head -20\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 102,
+            "prompt_tokens": 1347,
+            "total_tokens": 1449,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./tests/flatpages_tests/test_forms.py\n./tests/test_runner_apps/tagged/tests_syntax_error.py\n./tests/foreign_object/test_forms.py\n./tests/auth_tests/test_forms.py\n./tests/test_exceptions/test_validation_error.py\n./tests/import_error_package/__init__.py\n./tests/inline_formsets/models.py\n./tests/inline_formsets/__init__.py\n./tests/inline_formsets/tests.py\n./tests/model_forms/models.py\n./tests/model_forms/__init__.py\n./tests/model_forms/tests.py\n./tests/model_forms/test_modelchoicefield.py\n./tests/model_forms/test_uuid.py\n./tests/timezones/forms.py\n./tests/validation/test_error_messages.py\n./tests/migrations/migrations_test_apps/lookuperror_b/models.py\n./tests/migrations/migrations_test_apps/lookuperror_b/__init__.py\n./tests/migrations/migrations_test_apps/lookuperror_b/migrations/0001_initial.py\n./tests/migrations/migrations_test_apps/lookuperror_b/migrations/__init__.py\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me look more specifically for the core Django forms implementation:\n\n```bash\nfind . -path \"*/django/*\" -name \"*.py\" | grep -E \"(form|error)\" | head -20\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-5075fc27dfad4c2db7806873f1249449",
+          "created": 1760293569,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me look more specifically for the core Django forms implementation:\n\n```bash\nfind . -path \"*/django/*\" -name \"*.py\" | grep -E \"(form|error)\" | head -20\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 46,
+            "prompt_tokens": 1689,
+            "total_tokens": 1735,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./django/forms/models.py\n./django/forms/formsets.py\n./django/forms/__init__.py\n./django/forms/renderers.py\n./django/forms/boundfield.py\n./django/forms/fields.py\n./django/forms/utils.py\n./django/forms/widgets.py\n./django/forms/forms.py\n./django/contrib/auth/migrations/0007_alter_validators_add_error_messages.py\n./django/contrib/auth/forms.py\n./django/contrib/postgres/forms/ranges.py\n./django/contrib/postgres/forms/__init__.py\n./django/contrib/postgres/forms/hstore.py\n./django/contrib/postgres/forms/array.py\n./django/contrib/gis/gdal/error.py\n./django/contrib/gis/forms/__init__.py\n./django/contrib/gis/forms/fields.py\n./django/contrib/gis/forms/widgets.py\n./django/contrib/gis/geos/error.py\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Great! Now let me look at the key files - forms.py and formsets.py to understand how errors are handled:\n\n```bash\ngrep -n \"nonfield\\|ErrorList\" ./django/forms/forms.py ./django/forms/formsets.py\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-08d9645164334a988a6c666383e2c92a",
+          "created": 1760293770,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Great! Now let me look at the key files - forms.py and formsets.py to understand how errors are handled:\n\n```bash\ngrep -n \"nonfield\\|ErrorList\" ./django/forms/forms.py ./django/forms/formsets.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 52,
+            "prompt_tokens": 1948,
+            "total_tokens": 2000,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./django/forms/forms.py:9:from django.forms.utils import ErrorDict, ErrorList\n./django/forms/forms.py:65:                 initial=None, error_class=ErrorList, label_suffix=None,\n./django/forms/forms.py:313:        Return an ErrorList of errors that aren't associated with a particular\n./django/forms/forms.py:314:        field -- i.e., from Form.clean(). Return an empty ErrorList if there\n./django/forms/forms.py:317:        return self.errors.get(NON_FIELD_ERRORS, self.error_class(error_class='nonfield'))\n./django/forms/forms.py:359:                    self._errors[field] = self.error_class(error_class='nonfield')\n./django/forms/formsets.py:4:from django.forms.utils import ErrorList\n./django/forms/formsets.py:67:                 initial=None, error_class=ErrorList, form_kwargs=None,\n./django/forms/formsets.py:292:        Return an ErrorList of errors that aren't associated with a particular\n./django/forms/formsets.py:293:        form -- i.e., from formset.clean(). Return an empty ErrorList if there\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me examine the actual ErrorList class and how it's used in both forms and formsets:\n\n```bash\ngrep -A 10 -B 5 \"nonfield\" ./django/forms/forms.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-0dc9c01b3dda4fb9a948326b5cd7f5c7",
+          "created": 1760293850,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me examine the actual ErrorList class and how it's used in both forms and formsets:\n\n```bash\ngrep -A 10 -B 5 \"nonfield\" ./django/forms/forms.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 46,
+            "prompt_tokens": 2271,
+            "total_tokens": 2317,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n        \"\"\"\n        Return an ErrorList of errors that aren't associated with a particular\n        field -- i.e., from Form.clean(). Return an empty ErrorList if there\n        are none.\n        \"\"\"\n        return self.errors.get(NON_FIELD_ERRORS, self.error_class(error_class='nonfield'))\n\n    def add_error(self, field, error):\n        \"\"\"\n        Update the content of `self._errors`.\n\n        The `field` argument is the name of the field to which the errors\n        should be added. If it's None, treat the errors as NON_FIELD_ERRORS.\n\n        The `error` argument can be a single error, a list of errors, or a\n        dictionary that maps field names to lists of errors. An \"error\" can be\n--\n            if field not in self.errors:\n                if field != NON_FIELD_ERRORS and field not in self.fields:\n                    raise ValueError(\n                        \"'%s' has no field named '%s'.\" % (self.__class__.__name__, field))\n                if field == NON_FIELD_ERRORS:\n                    self._errors[field] = self.error_class(error_class='nonfield')\n                else:\n                    self._errors[field] = self.error_class()\n            self._errors[field].extend(error_list)\n            if field in self.cleaned_data:\n                del self.cleaned_data[field]\n\n    def has_error(self, field, code=None):\n        return field in self.errors and (\n            code is None or\n            any(error.code == code for error in self.errors.as_data()[field])\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Now let me check the formsets.py file to see how non-form errors are handled:\n\n```bash\ngrep -A 10 -B 5 \"non.*form\\|NON_FIELD_ERRORS\" ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-5c7d0ccd2a6648938e2e7b374586ef66",
+          "created": 1760293900,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Now let me check the formsets.py file to see how non-form errors are handled:\n\n```bash\ngrep -A 10 -B 5 \"non.*form\\|NON_FIELD_ERRORS\" ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 51,
+            "prompt_tokens": 2650,
+            "total_tokens": 2701,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n        self.files = files or {}\n        self.initial = initial\n        self.form_kwargs = form_kwargs or {}\n        self.error_class = error_class\n        self._errors = None\n        self._non_form_errors = None\n\n        messages = {}\n        for cls in reversed(type(self).__mro__):\n            messages.update(getattr(cls, 'default_error_messages', {}))\n        if error_messages is not None:\n            messages.update(error_messages)\n        self.error_messages = messages\n\n    def __str__(self):\n        return self.as_table()\n--\n\n    @classmethod\n    def get_ordering_widget(cls):\n        return cls.ordering_widget\n\n    def non_form_errors(self):\n        \"\"\"\n        Return an ErrorList of errors that aren't associated with a particular\n        form -- i.e., from formset.clean(). Return an empty ErrorList if there\n        are none.\n        \"\"\"\n        if self._non_form_errors is None:\n            self.full_clean()\n        return self._non_form_errors\n\n    @property\n    def errors(self):\n        \"\"\"Return a list of form.errors for every form in self.forms.\"\"\"\n        if self._errors is None:\n            self.full_clean()\n        return self._errors\n\n    def total_error_count(self):\n        \"\"\"Return the number of errors across all forms in the formset.\"\"\"\n        return len(self.non_form_errors()) +\\\n            sum(len(form_errors) for form_errors in self.errors)\n\n    def _should_delete_form(self, form):\n        \"\"\"Return whether or not the form was marked for deletion.\"\"\"\n        return form.cleaned_data.get(DELETION_FIELD_NAME, False)\n\n    def is_valid(self):\n        \"\"\"Return True if every form in self.forms is valid.\"\"\"\n        if not self.is_bound:\n            return False\n--\n        # Forms due to be deleted shouldn't cause the formset to be invalid.\n        forms_valid = all([\n            form.is_valid() for form in self.forms\n            if not (self.can_delete and self._should_delete_form(form))\n        ])\n        return forms_valid and not self.non_form_errors()\n\n    def full_clean(self):\n        \"\"\"\n        Clean all of self.data and populate self._errors and\n        self._non_form_errors.\n        \"\"\"\n        self._errors = []\n        self._non_form_errors = self.error_class()\n        empty_forms_count = 0\n\n        if not self.is_bound:  # Stop further processing.\n            return\n\n        if not self.management_form.is_valid():\n            error = ValidationError(\n                self.error_messages['missing_management_form'],\n                params={\n                    'field_names': ', '.join(\n--\n                        for field_name in self.management_form.errors\n                    ),\n                },\n                code='missing_management_form',\n            )\n            self._non_form_errors.append(error)\n\n        for i, form in enumerate(self.forms):\n            # Empty forms are unchanged forms beyond those with initial data.\n            if not form.has_changed() and i >= self.initial_form_count():\n                empty_forms_count += 1\n            # Accessing errors calls full_clean() if necessary.\n            # _should_delete_form() requires cleaned_data.\n            form_errors = form.errors\n            if self.can_delete and self._should_delete_form(form):\n                continue\n--\n                    \"Please submit at least %d forms.\", self.min_num) % self.min_num,\n                    code='too_few_forms')\n            # Give self.clean() a chance to do cross-form validation.\n            self.clean()\n        except ValidationError as e:\n            self._non_form_errors = self.error_class(e.error_list)\n\n    def clean(self):\n        \"\"\"\n        Hook for doing any extra formset-wide cleaning after Form.clean() has\n        been called on every form. Any ValidationError raised by this method\n        will not be associated with a particular form; it will be accessible\n        via formset.non_form_errors()\n        \"\"\"\n        pass\n\n    def has_changed(self):\n        \"\"\"Return True if data in any form differs from initial.\"\"\"\n        return any(form.has_changed() for form in self)\n\n    def add_fields(self, form, index):\n        \"\"\"A hook for adding extra fields on to each form instance.\"\"\"\n        initial_form_count = self.initial_form_count()\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Now I need to look at the ErrorList class itself to understand how CSS classes are applied:\n\n```bash\nfind . -name \"*.py\" -exec grep -l \"class ErrorList\" {} \\;\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-4c412e61348f48afb088218370a7ed10",
+          "created": 1760293956,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Now I need to look at the ErrorList class itself to understand how CSS classes are applied:\n\n```bash\nfind . -name \"*.py\" -exec grep -l \"class ErrorList\" {} \\;\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 45,
+            "prompt_tokens": 3572,
+            "total_tokens": 3617,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./django/forms/utils.py\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me examine the ErrorList class implementation:\n\n```bash\ncat ./django/forms/utils.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-8081a599755a4c62be45f1d05a3dd552",
+          "created": 1760293994,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me examine the ErrorList class implementation:\n\n```bash\ncat ./django/forms/utils.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 22,
+            "prompt_tokens": 3647,
+            "total_tokens": 3669,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nimport json\nfrom collections import UserList\n\nfrom django.conf import settings\nfrom django.core.exceptions import ValidationError\nfrom django.utils import timezone\nfrom django.utils.html import escape, format_html, format_html_join, html_safe\nfrom django.utils.translation import gettext_lazy as _\n\n\ndef pretty_name(name):\n    \"\"\"Convert 'first_name' to 'First name'.\"\"\"\n    if not name:\n        return ''\n    return name.replace('_', ' ').capitalize()\n\n\ndef flatatt(attrs):\n    \"\"\"\n    Convert a dictionary of attributes to a single string.\n    The returned string will contain a leading space followed by key=\"value\",\n    XML-style pairs. In the case of a boolean value, the key will appear\n    without a value. It is assumed that the keys do not need to be\n    XML-escaped. If the passed dictionary is empty, then return an empty\n    string.\n\n    The result is passed through 'mark_safe' (by way of 'format_html_join').\n    \"\"\"\n    key_value_attrs = []\n    boolean_attrs = []\n    for attr, value in attrs.items():\n        if isinstance(value, bool):\n            if value:\n                boolean_attrs.append((attr,))\n        elif value is not None:\n            key_value_attrs.append((attr, value))\n\n    return (\n        format_html_join('', ' {}=\"{}\"', sorted(key_value_attrs)) +\n        format_html_join('', ' {}', sorted(boolean_attrs))\n    )\n\n\n@html_safe\nclass ErrorDict(dict):\n    \"\"\"\n    A collection of errors that knows how to display itself in various formats.\n\n    The dictionary keys are the field names, and the values are the errors.\n    \"\"\"\n    def as_data(self):\n        return {f: e.as_data() for f, e in self.items()}\n\n    def get_json_data(self, escape_html=False):\n        return {f: e.get_json_data(escape_html) for f, e in self.items()}\n\n    def as_json(self, escape_html=False):\n        return json.dumps(self.get_json_data(escape_html))\n\n    def as_ul(self):\n        if not self:\n            return ''\n        return format_html(\n            '<ul class=\"errorlist\">{}</ul>',\n            format_html_join('', '<li>{}{}</li>', self.items())\n        )\n\n    def as_text(self):\n        output = []\n        for field, errors in self.items():\n            output.append('* %s' % field)\n            output.append('\\n'.join('  * %s' % e for e in errors))\n        return '\\n'.join(output)\n\n    def __str__(self):\n        return self.as_ul()\n\n\n@html_safe\nclass ErrorList(UserList, list):\n    \"\"\"\n    A collection of errors that knows how to display itself in various formats.\n    \"\"\"\n    def __init__(self, initlist=None, error_class=None):\n        super().__init__(initlist)\n\n        if error_class is None:\n            self.error_class = 'errorlist'\n        else:\n            self.error_class = 'errorlist {}'.format(error_class)\n\n    def as_data(self):\n        return ValidationError(self.data).error_list\n\n    def copy(self):\n        copy = super().copy()\n        copy.error_class = self.error_class\n        return copy\n\n    def get_json_data(self, escape_html=False):\n        errors = []\n        for error in self.as_data():\n            message = next(iter(error))\n            errors.append({\n                'message': escape(message) if escape_html else message,\n                'code': error.code or '',\n            })\n        return errors\n\n    def as_json(self, escape_html=False):\n        return json.dumps(self.get_json_data(escape_html))\n\n    def as_ul(self):\n        if not self.data:\n            return ''\n\n        return format_html(\n            '<ul class=\"{}\">{}</ul>',\n            self.error_class,\n            format_html_join('', '<li>{}</li>', ((e,) for e in self))\n        )\n\n    def as_text(self):\n        return '\\n'.join('* %s' % e for e in self)\n\n    def __str__(self):\n        return self.as_ul()\n\n    def __repr__(self):\n        return repr(list(self))\n\n    def __contains__(self, item):\n        return item in list(self)\n\n    def __eq__(self, other):\n        return list(self) == other\n\n    def __getitem__(self, i):\n        error = self.data[i]\n        if isinstance(error, ValidationError):\n            return next(iter(error))\n        return error\n\n    def __reduce_ex__(self, *args, **kwargs):\n        # The `list` reduce function returns an iterator as the fourth element\n        # that is normally used for repopulating. Since we only inherit from\n        # `list` for `isinstance` backward compatibility (Refs #17413) we\n        # nullify this iterator as it would otherwise result in duplicate\n        # entries. (Refs #23594)\n        info = super(UserList, self).__reduce_ex__(*args, **kwargs)\n        return info[:3] + (None, None)\n\n\n# Utilities for time zone support in DateTimeField et al.\n\ndef from_current_timezone(value):\n    \"\"\"\n    When time zone support is enabled, convert naive datetimes\n    entered in the current time zone to aware datetimes.\n    \"\"\"\n    if settings.USE_TZ and value is not None and timezone.is_naive(value):\n        current_timezone = timezone.get_current_timezone()\n        try:\n            if (\n                not timezone._is_pytz_zone(current_timezone) and\n                timezone._datetime_ambiguous_or_imaginary(value, current_timezone)\n            ):\n                raise ValueError('Ambiguous or non-existent time.')\n            return timezone.make_aware(value, current_timezone)\n        except Exception as exc:\n            raise ValidationError(\n                _('%(datetime)s couldn\u2019t be interpreted '\n                  'in time zone %(current_timezone)s; it '\n                  'may be ambiguous or it may not exist.'),\n                code='ambiguous_timezone',\n                params={'datetime': value, 'current_timezone': current_timezone}\n            ) from exc\n    return value\n\n\ndef to_current_timezone(value):\n    \"\"\"\n    When time zone support is enabled, convert aware datetimes\n    to naive datetimes in the current time zone for display.\n    \"\"\"\n    if settings.USE_TZ and value is not None and timezone.is_aware(value):\n        return timezone.make_naive(value)\n    return value\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Now I understand the issue. Looking at the code, I can see that:\n\n1. In `forms.py`, when handling non-field errors, it uses `error_class='nonfield'` \n2. In `formsets.py`, when handling non-form errors, it doesn't specify a CSS class, so it defaults to just 'errorlist'\n3. The PR requests that formsets should also have a `nonform` CSS class for non-form errors, similar to how forms have `nonfield`\n\nLooking at the ErrorList constructor, I can see that when `error_class` is provided, it gets formatted as `'errorlist {}'.format(error_class)`. So I need to modify the formsets.py to pass the appropriate error class for non-form errors.\n\nLet me check exactly where the non-form errors are created in formsets:\n\n```bash\ngrep -n \"_non_form_errors.*=\" ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-5fdf155b223d426da5820c0b29be109b",
+          "created": 1760294026,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Now I understand the issue. Looking at the code, I can see that:\n\n1. In `forms.py`, when handling non-field errors, it uses `error_class='nonfield'` \n2. In `formsets.py`, when handling non-form errors, it doesn't specify a CSS class, so it defaults to just 'errorlist'\n3. The PR requests that formsets should also have a `nonform` CSS class for non-form errors, similar to how forms have `nonfield`\n\nLooking at the ErrorList constructor, I can see that when `error_class` is provided, it gets formatted as `'errorlist {}'.format(error_class)`. So I need to modify the formsets.py to pass the appropriate error class for non-form errors.\n\nLet me check exactly where the non-form errors are created in formsets:\n\n```bash\ngrep -n \"_non_form_errors.*=\" ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 192,
+            "prompt_tokens": 5000,
+            "total_tokens": 5192,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n78:        self._non_form_errors = None\n336:        self._non_form_errors = self.error_class()\n383:            self._non_form_errors = self.error_class(e.error_list)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfect! Now I can see the exact locations where I need to make changes. Looking at line 336, I can see that `self._non_form_errors = self.error_class()` is called without specifying an error_class parameter, and at line 383, when there's a ValidationError, it's called with `e.error_list` but still without the proper error_class.\n\nLet me create a test script to verify the current behavior and then implement the fix:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms.utils import ErrorList\n\n# Test current behavior\nfs = BaseFormSet()\nprint('Current error_class for non_form_errors:', fs._non_form_errors.error_class)\n\"\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-fc79ac0ee66d4b119c8747df98c6a169",
+          "created": 1760294062,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Perfect! Now I can see the exact locations where I need to make changes. Looking at line 336, I can see that `self._non_form_errors = self.error_class()` is called without specifying an error_class parameter, and at line 383, when there's a ValidationError, it's called with `e.error_list` but still without the proper error_class.\n\nLet me create a test script to verify the current behavior and then implement the fix:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms.utils import ErrorList\n\n# Test current behavior\nfs = BaseFormSet()\nprint('Current error_class for non_form_errors:', fs._non_form_errors.error_class)\n\"\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 153,
+            "prompt_tokens": 5261,
+            "total_tokens": 5414,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nTraceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAttributeError: 'NoneType' object has no attribute 'error_class'\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me check how to properly instantiate a formset to test this:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms import formset_factory, Form\nfrom django.forms.fields import CharField\n\n# Create a simple form for testing\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create a formset factory\nTestFormSet = formset_factory(TestForm, extra=1)\n\n# Create an instance\nfs = TestFormSet()\nprint('Non-form errors type:', type(fs._non_form_errors))\nif fs._non_form_errors:\n    print('Error class:', fs._non_form_errors.error_class)\nelse:\n    print('No non-form errors yet')\n\"\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-b95e9dd15228430eb777675ca2a57187",
+          "created": 1760294082,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me check how to properly instantiate a formset to test this:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms import formset_factory, Form\nfrom django.forms.fields import CharField\n\n# Create a simple form for testing\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create a formset factory\nTestFormSet = formset_factory(TestForm, extra=1)\n\n# Create an instance\nfs = TestFormSet()\nprint('Non-form errors type:', type(fs._non_form_errors))\nif fs._non_form_errors:\n    print('Error class:', fs._non_form_errors.error_class)\nelse:\n    print('No non-form errors yet')\n\"\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 155,
+            "prompt_tokens": 5474,
+            "total_tokens": 5629,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nNon-form errors type: <class 'NoneType'>\nNo non-form errors yet\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me look at the exact place where the non_form_errors property is accessed to understand the flow better:\n\n```bash\ngrep -A 10 -B 5 \"def non_form_errors\" ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-99479bacce084b97a21536d1387e92eb",
+          "created": 1760294104,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me look at the exact place where the non_form_errors property is accessed to understand the flow better:\n\n```bash\ngrep -A 10 -B 5 \"def non_form_errors\" ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 50,
+            "prompt_tokens": 5670,
+            "total_tokens": 5720,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n\n    @classmethod\n    def get_ordering_widget(cls):\n        return cls.ordering_widget\n\n    def non_form_errors(self):\n        \"\"\"\n        Return an ErrorList of errors that aren't associated with a particular\n        form -- i.e., from formset.clean(). Return an empty ErrorList if there\n        are none.\n        \"\"\"\n        if self._non_form_errors is None:\n            self.full_clean()\n        return self._non_form_errors\n\n    @property\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Now I understand the flow. The issue is in the `full_clean` method where `_non_form_errors` is initialized. Let me make the fix by modifying the formsets.py file to add the `nonform` CSS class for non-form errors:\n\n```bash\nsed -i \"336s/self._non_form_errors = self.error_class()/self._non_form_errors = self.error_class(error_class='nonform')/\" ./django/forms/formsets.py && \\\nsed -i \"383s/self._non_form_errors = self.error_class(e.error_list)/self._non_form_errors = self.error_class(e.error_list, error_class='nonform')/\" ./django/forms/formsets.py\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-91a586b0af4e48f4bc6b8a4b40fc6e3c",
+          "created": 1760294165,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Now I understand the flow. The issue is in the `full_clean` method where `_non_form_errors` is initialized. Let me make the fix by modifying the formsets.py file to add the `nonform` CSS class for non-form errors:\n\n```bash\nsed -i \"336s/self._non_form_errors = self.error_class()/self._non_form_errors = self.error_class(error_class='nonform')/\" ./django/forms/formsets.py && \\\nsed -i \"383s/self._non_form_errors = self.error_class(e.error_list)/self._non_form_errors = self.error_class(e.error_list, error_class='nonform')/\" ./django/forms/formsets.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 146,
+            "prompt_tokens": 5839,
+            "total_tokens": 5985,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me verify that my changes were applied correctly:\n\n```bash\ngrep -A 3 -B 3 \"nonform\" ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-248f077ac7c14a5c8af4d093698092c5",
+          "created": 1760294376,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me verify that my changes were applied correctly:\n\n```bash\ngrep -A 3 -B 3 \"nonform\" ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 36,
+            "prompt_tokens": 6009,
+            "total_tokens": 6045,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n        self._non_form_errors.\n        \"\"\"\n        self._errors = []\n        self._non_form_errors = self.error_class(error_class='nonform')\n        empty_forms_count = 0\n\n        if not self.is_bound:  # Stop further processing.\n--\n            # Give self.clean() a chance to do cross-form validation.\n            self.clean()\n        except ValidationError as e:\n            self._non_form_errors = self.error_class(e.error_list, error_class='nonform')\n\n    def clean(self):\n        \"\"\"\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me also double-check that the original lines were properly modified:\n\n```bash\ngrep -n \"self._non_form_errors = self.error_class\" ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-1cd914ebac864b3fb56e5dc2656bf177",
+          "created": 1760294678,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me also double-check that the original lines were properly modified:\n\n```bash\ngrep -n \"self._non_form_errors = self.error_class\" ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 40,
+            "prompt_tokens": 6173,
+            "total_tokens": 6213,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n336:        self._non_form_errors = self.error_class(error_class='nonform')\n383:            self._non_form_errors = self.error_class(e.error_list, error_class='nonform')\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfect! My changes have been applied correctly. Let me now create a simple test to verify that the fix works as expected:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms import formset_factory, Form\nfrom django.forms.fields import CharField\nfrom django.forms.utils import ErrorList\n\n# Create a simple form for testing\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create a formset factory\nTestFormSet = formset_factory(TestForm, extra=1)\n\n# Create an instance and trigger full_clean to initialize _non_form_errors\nfs = TestFormSet()\nfs.full_clean()\n\n# Check the error class\nprint('Error class for non_form_errors:', fs._non_form_errors.error_class)\n\"\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-7e630b3674294951a94ba0eacd48ea30",
+          "created": 1760294709,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Perfect! My changes have been applied correctly. Let me now create a simple test to verify that the fix works as expected:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms import formset_factory, Form\nfrom django.forms.fields import CharField\nfrom django.forms.utils import ErrorList\n\n# Create a simple form for testing\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create a formset factory\nTestFormSet = formset_factory(TestForm, extra=1)\n\n# Create an instance and trigger full_clean to initialize _non_form_errors\nfs = TestFormSet()\nfs.full_clean()\n\n# Check the error class\nprint('Error class for non_form_errors:', fs._non_form_errors.error_class)\n\"\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 165,
+            "prompt_tokens": 6281,
+            "total_tokens": 6446,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nError class for non_form_errors: errorlist nonform\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Excellent! The fix is working correctly. The error class is now `errorlist nonform` instead of just `errorlist`, which matches what was requested in the PR description.\n\nLet me also test that the error handling path works correctly:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms import formset_factory, Form\nfrom django.forms.fields import CharField\nfrom django.forms.utils import ErrorList\nfrom django.core.exceptions import ValidationError\n\n# Create a simple form for testing\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create a formset factory with a custom clean that raises an error\nclass TestFormSet(BaseFormSet):\n    def clean(self):\n        raise ValidationError('Global formset error')\n\n# Create an instance and trigger full_clean to see error handling\nfs = TestFormSet()\ntry:\n    fs.full_clean()\nexcept:\n    pass\n\n# Check the error class\nprint('Error class for non_form_errors with ValidationError:', fs._non_form_errors.error_class)\n\"\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-122f6533d3a741228306e550e4c5f5d0",
+          "created": 1760294763,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Excellent! The fix is working correctly. The error class is now `errorlist nonform` instead of just `errorlist`, which matches what was requested in the PR description.\n\nLet me also test that the error handling path works correctly:\n\n```bash\npython -c \"\nfrom django.forms.formsets import BaseFormSet\nfrom django.forms import formset_factory, Form\nfrom django.forms.fields import CharField\nfrom django.forms.utils import ErrorList\nfrom django.core.exceptions import ValidationError\n\n# Create a simple form for testing\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create a formset factory with a custom clean that raises an error\nclass TestFormSet(BaseFormSet):\n    def clean(self):\n        raise ValidationError('Global formset error')\n\n# Create an instance and trigger full_clean to see error handling\nfs = TestFormSet()\ntry:\n    fs.full_clean()\nexcept:\n    pass\n\n# Check the error class\nprint('Error class for non_form_errors with ValidationError:', fs._non_form_errors.error_class)\n\"\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 219,
+            "prompt_tokens": 6482,
+            "total_tokens": 6701,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nError class for non_form_errors with ValidationError: errorlist nonform\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfect! Both code paths are now correctly applying the `nonform` CSS class. Let me also verify that regular form errors still work as expected by checking the forms behavior:\n\n```bash\npython -c \"\nfrom django.forms import Form\nfrom django.forms.fields import CharField\nfrom django.forms.utils import ErrorList\n\n# Create a simple form\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create an instance and add a non-field error\nform = TestForm()\nform.add_error(None, 'Non-field error')\n\n# Check the error class\nprint('Error class for form non-field errors:', form.errors.get('__all__', ErrorList()).error_class)\n\"\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-9bd44b5560ad4706a2ec5af1c197474e",
+          "created": 1760294777,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Perfect! Both code paths are now correctly applying the `nonform` CSS class. Let me also verify that regular form errors still work as expected by checking the forms behavior:\n\n```bash\npython -c \"\nfrom django.forms import Form\nfrom django.forms.fields import CharField\nfrom django.forms.utils import ErrorList\n\n# Create a simple form\nclass TestForm(Form):\n    name = CharField(max_length=100)\n\n# Create an instance and add a non-field error\nform = TestForm()\nform.add_error(None, 'Non-field error')\n\n# Check the error class\nprint('Error class for form non-field errors:', form.errors.get('__all__', ErrorList()).error_class)\n\"\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 144,
+            "prompt_tokens": 6739,
+            "total_tokens": 6883,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nTraceback (most recent call last):\n  File \"<string>\", line 11, in <module>\n  File \"/testbed/django/forms/forms.py\", line 76, in __init__\n    self.label_suffix = label_suffix if label_suffix is not None else _(':')\n  File \"/testbed/django/utils/translation/__init__.py\", line 74, in gettext\n    return _trans.gettext(message)\n  File \"/testbed/django/utils/translation/__init__.py\", line 50, in __getattr__\n    if settings.USE_I18N:\n  File \"/testbed/django/conf/__init__.py\", line 69, in __getattr__\n    self._setup(name)\n  File \"/testbed/django/conf/__init__.py\", line 50, in _setup\n    raise ImproperlyConfigured(\ndjango.core.exceptions.ImproperlyConfigured: Requested setting USE_I18N, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "The test environment needs Django settings. Let me just verify that our changes are correct by looking at the final state of the modified file:\n\n```bash\necho \"=== Changes made to django/forms/formsets.py ===\" && \\\necho \"Line 336:\" && sed -n '336p' ./django/forms/formsets.py && \\\necho \"Line 383:\" && sed -n '383p' ./django/forms/formsets.py\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-b0db8bacdd054d7a8713b5fd6d5d53d2",
+          "created": 1760294812,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "The test environment needs Django settings. Let me just verify that our changes are correct by looking at the final state of the modified file:\n\n```bash\necho \"=== Changes made to django/forms/formsets.py ===\" && \\\necho \"Line 336:\" && sed -n '336p' ./django/forms/formsets.py && \\\necho \"Line 383:\" && sed -n '383p' ./django/forms/formsets.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 98,
+            "prompt_tokens": 7133,
+            "total_tokens": 7231,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Changes made to django/forms/formsets.py ===\nLine 336:\n        self._non_form_errors = self.error_class(error_class='nonform')\nLine 383:\n            self._non_form_errors = self.error_class(e.error_list, error_class='nonform')\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me also run a quick test to make sure the existing functionality still works by running a basic Django test:\n\n```bash\ncd /testbed && python -m pytest tests/forms/tests.py::FormTests::test_non_field_errors -v\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-6cc95d19ebb54b7e8b69aaaaebdf9895",
+          "created": 1760294900,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me also run a quick test to make sure the existing functionality still works by running a basic Django test:\n\n```bash\ncd /testbed && python -m pytest tests/forms/tests.py::FormTests::test_non_field_errors -v\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 52,
+            "prompt_tokens": 7314,
+            "total_tokens": 7366,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\n/opt/miniconda3/envs/testbed/bin/python: No module named pytest\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me check if there are any syntax issues with my changes by examining the context around those lines:\n\n```bash\nsed -n '330,340p' ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-f695c89558394ff69041b49f50302be0",
+          "created": 1760294966,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me check if there are any syntax issues with my changes by examining the context around those lines:\n\n```bash\nsed -n '330,340p' ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 46,
+            "prompt_tokens": 7407,
+            "total_tokens": 7453,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n    def full_clean(self):\n        \"\"\"\n        Clean all of self.data and populate self._errors and\n        self._non_form_errors.\n        \"\"\"\n        self._errors = []\n        self._non_form_errors = self.error_class(error_class='nonform')\n        empty_forms_count = 0\n\n        if not self.is_bound:  # Stop further processing.\n            return\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "```bash\nsed -n '375,385p' ./django/forms/formsets.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-eb3b9dcfc7ff41e6a6b56fdf1c7f91e5",
+          "created": 1760294987,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "```bash\nsed -n '375,385p' ./django/forms/formsets.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 26,
+            "prompt_tokens": 7553,
+            "total_tokens": 7579,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n                    self.total_form_count() - len(self.deleted_forms) - empty_forms_count < self.min_num):\n                raise ValidationError(ngettext(\n                    \"Please submit at least %d form.\",\n                    \"Please submit at least %d forms.\", self.min_num) % self.min_num,\n                    code='too_few_forms')\n            # Give self.clean() a chance to do cross-form validation.\n            self.clean()\n        except ValidationError as e:\n            self._non_form_errors = self.error_class(e.error_list, error_class='nonform')\n\n    def clean(self):\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Everything looks good. Let me also verify that the imports are correct and that the ErrorList class supports the error_class parameter:\n\n```bash\ngrep -A 10 \"def __init__\" ./django/forms/utils.py\n```\n",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-999218497377412a820fd9899d1824c7",
+          "created": 1760295002,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Everything looks good. Let me also verify that the imports are correct and that the ErrorList class supports the error_class parameter:\n\n```bash\ngrep -A 10 \"def __init__\" ./django/forms/utils.py\n```\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 49,
+            "prompt_tokens": 7716,
+            "total_tokens": 7765,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n    def __init__(self, initlist=None, error_class=None):\n        super().__init__(initlist)\n\n        if error_class is None:\n            self.error_class = 'errorlist'\n        else:\n            self.error_class = 'errorlist {}'.format(error_class)\n\n    def as_data(self):\n        return ValidationError(self.data).error_list\n\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfect! The ErrorList class indeed supports the error_class parameter and formats it correctly as `'errorlist {}'.format(error_class)`.\n\nMy implementation is correct and complete. I have successfully added the `nonform` CSS class for non-form errors in FormSets, which matches the pattern already established for forms using the `nonfield` CSS class.\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-0d38df33940a4f53aa95b6d885ebbfc7",
+          "created": 1760295023,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Perfect! The ErrorList class indeed supports the error_class parameter and formats it correctly as `'errorlist {}'.format(error_class)`.\n\nMy implementation is correct and complete. I have successfully added the `nonform` CSS class for non-form errors in FormSets, which matches the pattern already established for forms using the `nonfield` CSS class.\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 93,
+            "prompt_tokens": 7859,
+            "total_tokens": 7952,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "diff --git a/django/forms/formsets.py b/django/forms/formsets.py\nindex a89c35599f..1b0d4554e0 100644\n--- a/django/forms/formsets.py\n+++ b/django/forms/formsets.py\n@@ -333,7 +333,7 @@ class BaseFormSet:\n         self._non_form_errors.\n         \"\"\"\n         self._errors = []\n-        self._non_form_errors = self.error_class()\n+        self._non_form_errors = self.error_class(error_class='nonform')\n         empty_forms_count = 0\n \n         if not self.is_bound:  # Stop further processing.\n@@ -380,7 +380,7 @@ class BaseFormSet:\n             # Give self.clean() a chance to do cross-form validation.\n             self.clean()\n         except ValidationError as e:\n-            self._non_form_errors = self.error_class(e.error_list)\n+            self._non_form_errors = self.error_class(e.error_list, error_class='nonform')\n \n     def clean(self):\n         \"\"\"\n"
+    }
+  ],
+  "trajectory_format": "mini-swe-agent-1",
+  "instance_id": "django__django-14608"
+}

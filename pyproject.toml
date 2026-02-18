@@ -9,6 +9,8 @@ description = "Minimal trajectory distillation scaffold with a vLLM request loop
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "pandas>=2.3.3",
+    "plotly>=6.5.2",
     "vllm>=0.15.1",
 ]
 

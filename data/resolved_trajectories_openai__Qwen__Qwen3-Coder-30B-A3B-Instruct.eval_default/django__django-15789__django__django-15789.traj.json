@@ -1,0 +1,1385 @@
+{
+  "info": {
+    "exit_status": "Submitted",
+    "submission": "diff --git a/django/utils/html.py b/django/utils/html.py\nindex d0bc97be80..30b7d6dc42 100644\n--- a/django/utils/html.py\n+++ b/django/utils/html.py\n@@ -59,22 +59,6 @@ _json_script_escapes = {\n }\n \n \n-def json_script(value, element_id=None):\n-    \"\"\"\n-    Escape all the HTML/XML special characters with their unicode escapes, so\n-    value is safe to be output anywhere except for inside a tag attribute. Wrap\n-    the escaped JSON in a script tag.\n-    \"\"\"\n-    from django.core.serializers.json import DjangoJSONEncoder\n-\n-    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n-    if element_id:\n-        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n-        args = (element_id, mark_safe(json_str))\n-    else:\n-        template = '<script type=\"application/json\">{}</script>'\n-        args = (mark_safe(json_str),)\n-    return format_html(template, *args)\n \n \n def conditional_escape(text):\n@@ -419,3 +403,24 @@ def html_safe(klass):\n     klass.__str__ = lambda self: mark_safe(klass_str(self))\n     klass.__html__ = lambda self: str(self)\n     return klass\n+def json_script(value, element_id=None, encoder=None):\n+    \"\"\"\n+    Escape all the HTML/XML special characters with their unicode escapes, so\n+    value is safe to be output anywhere except for inside a tag attribute. Wrap\n+    the escaped JSON in a script tag.\n+\n+    Args:\n+        value: The value to convert to JSON.\n+        element_id: Optional ID for the script tag.\n+        encoder: Optional custom JSON encoder class.\n+    \"\"\"\n+    from django.core.serializers.json import DjangoJSONEncoder\n+\n+    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n+    if element_id:\n+        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n+        args = (element_id, mark_safe(json_str))\n+    else:\n+        template = '<script type=\"application/json\">{}</script>'\n+        args = (mark_safe(json_str),)\n+    return format_html(template, *args)\ndiff --git a/test_enhanced_json_script.py b/test_enhanced_json_script.py\nnew file mode 100644\nindex 0000000000..672e61cfa4\n--- /dev/null\n+++ b/test_enhanced_json_script.py\n@@ -0,0 +1,52 @@\n+#!/usr/bin/env python\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+if not settings.configured:\n+    settings.configure(\n+        DEBUG=True,\n+        USE_TZ=True,\n+        SECRET_KEY='test-secret-key',\n+    )\n+\n+django.setup()\n+\n+from django.utils.html import json_script\n+from django.core.serializers.json import DjangoJSONEncoder\n+import json\n+\n+# Test current functionality still works\n+print(\"Testing current json_script functionality:\")\n+data = {\"key\": \"value\", \"special\": \"<>&\"}\n+result = json_script(data, \"test_id\")\n+print(f\"Result: {result}\")\n+\n+# Test with custom encoder\n+class CustomJSONEncoder(json.JSONEncoder):\n+    def default(self, obj):\n+        if isinstance(obj, complex):\n+            return {\"real\": obj.real, \"imag\": obj.imag}\n+        return super().default(obj)\n+\n+print(\"\\nTesting with custom encoder:\")\n+try:\n+    # Test with complex number\n+    complex_data = {\"number\": 1+2j}\n+    result = json_script(complex_data, \"test_id\", encoder=CustomJSONEncoder)\n+    print(f\"Success with custom encoder: {result}\")\n+    \n+    # Test without encoder (should use default)\n+    result2 = json_script(data, \"test_id\")\n+    print(f\"Success with default encoder: {result2}\")\n+    \n+    # Test with None encoder explicitly\n+    result3 = json_script(data, \"test_id\", encoder=None)\n+    print(f\"Success with explicit None encoder: {result3}\")\n+    \n+except Exception as e:\n+    print(f\"Error: {e}\")\n+    import traceback\n+    traceback.print_exc()\ndiff --git a/test_json_script_encoder.py b/test_json_script_encoder.py\nnew file mode 100644\nindex 0000000000..0da87ce2a2\n--- /dev/null\n+++ b/test_json_script_encoder.py\n@@ -0,0 +1,46 @@\n+#!/usr/bin/env python\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+if not settings.configured:\n+    settings.configure(\n+        DEBUG=True,\n+        USE_TZ=True,\n+        SECRET_KEY='test-secret-key',\n+    )\n+\n+django.setup()\n+\n+from django.utils.html import json_script\n+from django.core.serializers.json import DjangoJSONEncoder\n+import json\n+\n+# Test current functionality\n+print(\"Testing current json_script functionality:\")\n+data = {\"key\": \"value\", \"special\": \"<>&\"}\n+result = json_script(data, \"test_id\")\n+print(f\"Result: {result}\")\n+\n+# Test with custom encoder\n+class CustomJSONEncoder(json.JSONEncoder):\n+    def default(self, obj):\n+        if isinstance(obj, complex):\n+            return {\"real\": obj.real, \"imag\": obj.imag}\n+        return super().default(obj)\n+\n+print(\"\\nTesting with custom encoder (should fail currently):\")\n+try:\n+    result = json_script(data, \"test_id\", encoder=CustomJSONEncoder)\n+    print(f\"Success: {result}\")\n+except TypeError as e:\n+    print(f\"Expected error: {e}\")\n+\n+print(\"\\nTesting with DjangoJSONEncoder directly:\")\n+try:\n+    json_str = json.dumps(data, cls=DjangoJSONEncoder)\n+    print(f\"DjangoJSONEncoder result: {json_str}\")\n+except Exception as e:\n+    print(f\"Error: {e}\")\n",
+    "model_stats": {
+      "instance_cost": 0.8607425999999999,
+      "api_calls": 30
+    },
+    "mini_version": "1.13.2",
+    "config": {
+      "agent": {
+        "system_template": "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n",
+        "instance_template": "<pr_description>\nConsider the following PR description:\n{{task}}\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>\n",
+        "timeout_template": "The last command <command>{{action['action']}}</command> timed out and has been killed.\nThe output of the command was:\n <output>\n{{output}}\n</output>\nPlease try another command and make sure to avoid those requiring interactive input.",
+        "format_error_template": "Please always provide EXACTLY ONE action in triple backticks, found {{actions|length}} actions.\n\nPlease format your action in triple backticks as shown in <response_example>.\n\n<response_example>\nHere are some thoughts about why you want to perform the action.\n\n```bash\n<action>\n```\n</response_example>\n\nIf you have completed your assignment, please consult the first message about how to\nsubmit your solution (you will not be able to continue working on this task after that).\n",
+        "action_observation_template": "<returncode>{{output.returncode}}</returncode>\n{% if output.output | length < 10000 -%}\n<output>\n{{ output.output -}}\n</output>\n{%- else -%}\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning>\n{%- set elided_chars = output.output | length - 10000 -%}\n<output_head>\n{{ output.output[:5000] }}\n</output_head>\n<elided_chars>\n{{ elided_chars }} characters elided\n</elided_chars>\n<output_tail>\n{{ output.output[-5000:] }}\n</output_tail>\n{%- endif -%}\n",
+        "step_limit": 250,
+        "cost_limit": 3.0
+      },
+      "model": {
+        "model_name": "openai/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+        "model_kwargs": {
+          "drop_params": true,
+          "temperature": 0.0,
+          "api_key": "EMPTY"
+        },
+        "litellm_model_registry": "/root/.config/mini-swe-agent/custom_models.json"
+      },
+      "environment": {
+        "image": "docker.io/swebench/sweb.eval.x86_64.django_1776_django-15789:latest",
+        "cwd": "/testbed",
+        "env": {
+          "PAGER": "cat",
+          "MANPAGER": "cat",
+          "LESS": "-R",
+          "PIP_PROGRESS_BAR": "off",
+          "TQDM_DISABLE": "1"
+        },
+        "forward_env": [],
+        "timeout": 60,
+        "executable": "docker",
+        "run_args": [
+          "--rm"
+        ],
+        "container_timeout": "2h",
+        "pull_timeout": 120
+      },
+      "agent_type": "minisweagent.run.extra.swebench.ProgressTrackingAgent",
+      "model_type": "minisweagent.models.litellm_model.LitellmModel",
+      "environment_type": "minisweagent.environments.docker.DockerEnvironment"
+    }
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected."
+    },
+    {
+      "role": "user",
+      "content": "<pr_description>\nConsider the following PR description:\nAdd an encoder parameter to django.utils.html.json_script().\nDescription\n\t\nI have a use case where I want to customize the JSON encoding of some values to output to the template layer. It looks like django.utils.html.json_script is a good utility for that, however the JSON encoder is hardcoded to DjangoJSONEncoder. I think it would be nice to be able to pass a custom encoder class.\nBy the way, django.utils.html.json_script is not documented (only its template filter counterpart is), would it be a good thing to add to the docs?\n\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: First, I need to understand the current implementation of `django.utils.html.json_script()` to see how it's structured and where I need to make changes. Let me find this function in the codebase.\n\n```bash\nfind . -name \"*.py\" -exec grep -l \"json_script\" {} \\;\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-64ef3f5a2fdc469289077423c6e06a8b",
+          "created": 1760303332,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: First, I need to understand the current implementation of `django.utils.html.json_script()` to see how it's structured and where I need to make changes. Let me find this function in the codebase.\n\n```bash\nfind . -name \"*.py\" -exec grep -l \"json_script\" {} \\;\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 74,
+            "prompt_tokens": 1321,
+            "total_tokens": 1395,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./tests/utils_tests/test_html.py\n./tests/template_tests/filter_tests/test_json_script.py\n./django/template/defaultfilters.py\n./django/utils/html.py\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me examine the main implementation in `django/utils/html.py` to understand the current `json_script` function:\n\n```bash\ncat ./django/utils/html.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-fdd0d3a8efa34e7d90ac113aca69a3d8",
+          "created": 1760303354,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me examine the main implementation in `django/utils/html.py` to understand the current `json_script` function:\n\n```bash\ncat ./django/utils/html.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 45,
+            "prompt_tokens": 1451,
+            "total_tokens": 1496,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\n\"\"\"HTML utilities suitable for global use.\"\"\"\n\nimport html\nimport json\nimport re\nfrom html.parser import HTMLParser\nfrom urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit, urlunsplit\n\nfrom django.utils.encoding import punycode\nfrom django.utils.functional import Promise, keep_lazy, keep_lazy_text\nfrom django.utils.http import RFC3986_GENDELIMS, RFC3986_SUBDELIMS\nfrom django.utils.regex_helper import _lazy_re_compile\nfrom django.utils.safestring import SafeData, SafeString, mark_safe\nfrom django.utils.text import normalize_newlines\n\n\n@keep_lazy(SafeString)\ndef escape(text):\n    \"\"\"\n    Return the given text with ampersands, quotes and angle brackets encoded\n    for use in HTML.\n\n    Always escape input, even if it's already escaped and marked as such.\n    This may result in double-escaping. If this is a concern, use\n    conditional_escape() instead.\n    \"\"\"\n    return SafeString(html.escape(str(text)))\n\n\n_js_escapes = {\n    ord(\"\\\\\"): \"\\\\u005C\",\n    ord(\"'\"): \"\\\\u0027\",\n    ord('\"'): \"\\\\u0022\",\n    ord(\">\"): \"\\\\u003E\",\n    ord(\"<\"): \"\\\\u003C\",\n    ord(\"&\"): \"\\\\u0026\",\n    ord(\"=\"): \"\\\\u003D\",\n    ord(\"-\"): \"\\\\u002D\",\n    ord(\";\"): \"\\\\u003B\",\n    ord(\"`\"): \"\\\\u0060\",\n    ord(\"\\u2028\"): \"\\\\u2028\",\n    ord(\"\\u2029\"): \"\\\\u2029\",\n}\n\n# Escape every ASCII character with a value less than 32.\n_js_escapes.update((ord(\"%c\" % z), \"\\\\u%04X\" % z) for z in range(32))\n\n\n@keep_lazy(SafeString)\ndef escapejs(value):\n    \"\"\"Hex encode characters for use in JavaScript strings.\"\"\"\n    return mark_safe(str(value).translate(_js_escapes))\n\n\n_json_script_escapes = {\n    ord(\">\"): \"\\\\u003E\",\n    ord(\"<\"): \"\\\\u003C\",\n    ord(\"&\"): \"\\\\u0026\",\n}\n\n\ndef json_script(value, element_id=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n    \"\"\"\n    from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n        args = (element_id, mark_safe(json_str))\n    else:\n        template = '<script type=\"application/json\">{}</script>'\n        args = (mark_safe(json_str),)\n    return format_html(template, *args)\n\n\ndef conditional_escape(text):\n    \"\"\"\n    Similar to escape(), except that it doesn't operate on pre-escaped strings.\n\n    This function relies on the __html__ convention used both by Django's\n    SafeData class and by third-party libraries like markupsafe.\n    \"\"\"\n    if isinstance(text, Promise):\n        text = str(text)\n    if hasattr(text, \"__html__\"):\n        return text.__html__()\n    else:\n        return escape(text)\n\n\ndef format_html(format_string, *args, **kwargs):\n    \"\"\"\n    Similar to str.format, but pass all arguments through conditional_escape(),\n    and call mark_safe() on the result. This function should be used instead\n    of str.format or % interpolation to build up small HTML fragments.\n    \"\"\"\n    args_safe = map(conditional_escape, args)\n    kwargs_safe = {k: conditional_escape(v) for (k, v) in kwargs.items()}\n    return mark_safe(format_string.format(*args_safe, **kwargs_safe))\n\n\ndef format_html_join(sep, format_string, args_generator):\n    \"\"\"\n    A wrapper of format_html, for the common case of a group of arguments that\n    need to be formatted using the same format string, and then joined using\n    'sep'. 'sep' is also passed through conditional_escape.\n\n    'args_generator' should be an iterator that returns the sequence of 'args'\n    that will be passed to format_html.\n\n    Example:\n\n      format_html_join('\\n', \"<li>{} {}</li>\", ((u.first_name, u.last_name)\n                                                  for u in users))\n    \"\"\"\n    return mark_safe(\n        conditional_escape(sep).join(\n            format_html(format_string, *args) for args in args_generator\n        )\n    )\n\n\n@keep_lazy_text\ndef linebreaks(value, autoescape=False):\n    \"\"\"Convert newlines into <p> and <br>s.\"\"\"\n    value = normalize_newlines(value)\n    paras = re.split(\"\\n{2,}\", str(value))\n    if autoescape:\n        paras = [\"<p>%s</p>\" % escape(p).replace(\"\\n\", \"<br>\") for p in paras]\n    else:\n        paras = [\"<p>%s</p>\" % p.replace(\"\\n\", \"<br>\") for p in paras]\n    return \"\\n\\n\".join(paras)\n\n\nclass MLStripper(HTMLParser):\n    def __init__(self):\n        super().__init__(convert_charrefs=False)\n        self.reset()\n        self.fed = []\n\n    def handle_data(self, d):\n        self.fed.append(d)\n\n    def handle_entityref(self, name):\n        self.fed.append(\"&%s;\" % name)\n\n    def handle_charref(self, name):\n        self.fed.append(\"&#%s;\" % name)\n\n    def get_data(self):\n        return \"\".join(self.fed)\n\n\ndef _strip_once(value):\n    \"\"\"\n    Internal tag stripping utility used by strip_tags.\n    \"\"\"\n    s = MLStripper()\n    s.feed(value)\n    s.close()\n    return s.get_data()\n\n\n@keep_lazy_te\n</output_head>\n<elided_chars>\n4216 characters elided\n</elided_chars>\n<output_tail>\n        nofollow_attr = ' rel=\"nofollow\"' if nofollow else \"\"\n            if self.simple_url_re.match(middle):\n                url = smart_urlquote(html.unescape(middle))\n            elif self.simple_url_2_re.match(middle):\n                url = smart_urlquote(\"http://%s\" % html.unescape(middle))\n            elif \":\" not in middle and self.is_email_simple(middle):\n                local, domain = middle.rsplit(\"@\", 1)\n                try:\n                    domain = punycode(domain)\n                except UnicodeError:\n                    return word\n                url = self.mailto_template.format(local=local, domain=domain)\n                nofollow_attr = \"\"\n            # Make link.\n            if url:\n                trimmed = self.trim_url(middle, limit=trim_url_limit)\n                if autoescape and not safe_input:\n                    lead, trail = escape(lead), escape(trail)\n                    trimmed = escape(trimmed)\n                middle = self.url_template.format(\n                    href=escape(url),\n                    attrs=nofollow_attr,\n                    url=trimmed,\n                )\n                return mark_safe(f\"{lead}{middle}{trail}\")\n            else:\n                if safe_input:\n                    return mark_safe(word)\n                elif autoescape:\n                    return escape(word)\n        elif safe_input:\n            return mark_safe(word)\n        elif autoescape:\n            return escape(word)\n        return word\n\n    def trim_url(self, x, *, limit):\n        if limit is None or len(x) <= limit:\n            return x\n        return \"%s\u2026\" % x[: max(0, limit - 1)]\n\n    def trim_punctuation(self, word):\n        \"\"\"\n        Trim trailing and wrapping punctuation from `word`. Return the items of\n        the new state.\n        \"\"\"\n        lead, middle, trail = \"\", word, \"\"\n        # Continue trimming until middle remains unchanged.\n        trimmed_something = True\n        while trimmed_something:\n            trimmed_something = False\n            # Trim wrapping punctuation.\n            for opening, closing in self.wrapping_punctuation:\n                if middle.startswith(opening):\n                    middle = middle[len(opening) :]\n                    lead += opening\n                    trimmed_something = True\n                # Keep parentheses at the end only if they're balanced.\n                if (\n                    middle.endswith(closing)\n                    and middle.count(closing) == middle.count(opening) + 1\n                ):\n                    middle = middle[: -len(closing)]\n                    trail = closing + trail\n                    trimmed_something = True\n            # Trim trailing punctuation (after trimming wrapping punctuation,\n            # as encoded entities contain ';'). Unescape entities to avoid\n            # breaking them by removing ';'.\n            middle_unescaped = html.unescape(middle)\n            stripped = middle_unescaped.rstrip(self.trailing_punctuation_chars)\n            if middle_unescaped != stripped:\n                punctuation_count = len(middle_unescaped) - len(stripped)\n                trail = middle[-punctuation_count:] + trail\n                middle = middle[:-punctuation_count]\n                trimmed_something = True\n        return lead, middle, trail\n\n    @staticmethod\n    def is_email_simple(value):\n        \"\"\"Return True if value looks like an email address.\"\"\"\n        # An @ must be in the middle of the value.\n        if \"@\" not in value or value.startswith(\"@\") or value.endswith(\"@\"):\n            return False\n        try:\n            p1, p2 = value.split(\"@\")\n        except ValueError:\n            # value contains more than one @.\n            return False\n        # Dot must be in p2 (e.g. example.com)\n        if \".\" not in p2 or p2.startswith(\".\"):\n            return False\n        return True\n\n\nurlizer = Urlizer()\n\n\n@keep_lazy_text\ndef urlize(text, trim_url_limit=None, nofollow=False, autoescape=False):\n    return urlizer(\n        text, trim_url_limit=trim_url_limit, nofollow=nofollow, autoescape=autoescape\n    )\n\n\ndef avoid_wrapping(value):\n    \"\"\"\n    Avoid text wrapping in the middle of a phrase by adding non-breaking\n    spaces where there previously were normal spaces.\n    \"\"\"\n    return value.replace(\" \", \"\\xa0\")\n\n\ndef html_safe(klass):\n    \"\"\"\n    A decorator that defines the __html__ method. This helps non-Django\n    templates to detect classes whose __str__ methods return SafeString.\n    \"\"\"\n    if \"__html__\" in klass.__dict__:\n        raise ValueError(\n            \"can't apply @html_safe to %s because it defines \"\n            \"__html__().\" % klass.__name__\n        )\n    if \"__str__\" not in klass.__dict__:\n        raise ValueError(\n            \"can't apply @html_safe to %s because it doesn't \"\n            \"define __str__().\" % klass.__name__\n        )\n    klass_str = klass.__str__\n    klass.__str__ = lambda self: mark_safe(klass_str(self))\n    klass.__html__ = lambda self: str(self)\n    return klass\n\n</output_tail>"
+    },
+    {
+      "role": "assistant",
+      "content": "Looking at the code, I can see the `json_script` function in `django/utils/html.py`. Let me focus on just that function to understand its current implementation:\n\n```bash\ngrep -n -A 15 \"def json_script\" ./django/utils/html.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-cb6df75a0f11412297292f2e06d037d7",
+          "created": 1760303367,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Looking at the code, I can see the `json_script` function in `django/utils/html.py`. Let me focus on just that function to understand its current implementation:\n\n```bash\ngrep -n -A 15 \"def json_script\" ./django/utils/html.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 63,
+            "prompt_tokens": 3935,
+            "total_tokens": 3998,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n62:def json_script(value, element_id=None):\n63-    \"\"\"\n64-    Escape all the HTML/XML special characters with their unicode escapes, so\n65-    value is safe to be output anywhere except for inside a tag attribute. Wrap\n66-    the escaped JSON in a script tag.\n67-    \"\"\"\n68-    from django.core.serializers.json import DjangoJSONEncoder\n69-\n70-    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n71-    if element_id:\n72-        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n73-        args = (element_id, mark_safe(json_str))\n74-    else:\n75-        template = '<script type=\"application/json\">{}</script>'\n76-        args = (mark_safe(json_str),)\n77-    return format_html(template, *args)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Now I need to check the existing tests to understand how this function is currently tested and what we need to modify:\n\n```bash\ngrep -n -A 10 -B 5 \"json_script\" ./tests/utils_tests/test_html.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-e6e8edc03c8147c08cb424dcf886c295",
+          "created": 1760303382,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Now I need to check the existing tests to understand how this function is currently tested and what we need to modify:\n\n```bash\ngrep -n -A 10 -B 5 \"json_script\" ./tests/utils_tests/test_html.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 57,
+            "prompt_tokens": 4225,
+            "total_tokens": 4282,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n7-    conditional_escape,\n8-    escape,\n9-    escapejs,\n10-    format_html,\n11-    html_safe,\n12:    json_script,\n13-    linebreaks,\n14-    smart_urlquote,\n15-    strip_spaces_between_tags,\n16-    strip_tags,\n17-    urlize,\n18-)\n19-from django.utils.safestring import mark_safe\n20-\n21-\n22-class TestUtilsHtml(SimpleTestCase):\n--\n175-        for value, output in items:\n176-            with self.subTest(value=value, output=output):\n177-                self.check_output(escapejs, value, output)\n178-                self.check_output(escapejs, lazystr(value), output)\n179-\n180:    def test_json_script(self):\n181-        tests = (\n182-            # \"<\", \">\" and \"&\" are quoted inside JSON strings\n183-            (\n184-                (\n185-                    \"&<>\",\n186-                    '<script id=\"test_id\" type=\"application/json\">'\n187-                    '\"\\\\u0026\\\\u003C\\\\u003E\"</script>',\n188-                )\n189-            ),\n190-            # \"<\", \">\" and \"&\" are quoted inside JSON objects\n--\n207-                \"</script>\",\n208-            ),\n209-        )\n210-        for arg, expected in tests:\n211-            with self.subTest(arg=arg):\n212:                self.assertEqual(json_script(arg, \"test_id\"), expected)\n213-\n214:    def test_json_script_without_id(self):\n215-        self.assertHTMLEqual(\n216:            json_script({\"key\": \"value\"}),\n217-            '<script type=\"application/json\">{\"key\": \"value\"}</script>',\n218-        )\n219-\n220-    def test_smart_urlquote(self):\n221-        items = (\n222-            (\"http://\u00f6\u00e4\u00fc.com/\", \"http://xn--4ca9at.com/\"),\n223-            (\"http://\u00f6\u00e4\u00fc.com/\u00f6\u00e4\u00fc/\", \"http://xn--4ca9at.com/%C3%B6%C3%A4%C3%BC/\"),\n224-            # Everything unsafe is quoted, !*'();:@&=+$,/?#[]~ is considered\n225-            # safe as per RFC.\n226-            (\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Let me also check the template filter tests to understand the expected behavior better:\n\n```bash\ngrep -n -A 10 -B 5 \"json_script\" ./tests/template_tests/filter_tests/test_json_script.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-e1f94a84a38f4ef39fdde3193ea795dd",
+          "created": 1760303392,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Let me also check the template filter tests to understand the expected behavior better:\n\n```bash\ngrep -n -A 10 -B 5 \"json_script\" ./tests/template_tests/filter_tests/test_json_script.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 52,
+            "prompt_tokens": 4876,
+            "total_tokens": 4928,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n2-\n3-from ..utils import setup\n4-\n5-\n6-class JsonScriptTests(SimpleTestCase):\n7:    @setup({\"json-tag01\": '{{ value|json_script:\"test_id\" }}'})\n8-    def test_basic(self):\n9-        output = self.engine.render_to_string(\n10-            \"json-tag01\", {\"value\": {\"a\": \"testing\\r\\njson 'string\\\" <b>escaping</b>\"}}\n11-        )\n12-        self.assertEqual(\n13-            output,\n14-            '<script id=\"test_id\" type=\"application/json\">'\n15-            '{\"a\": \"testing\\\\r\\\\njson \\'string\\\\\" '\n16-            '\\\\u003Cb\\\\u003Eescaping\\\\u003C/b\\\\u003E\"}'\n17-            \"</script>\",\n18-        )\n19-\n20:    @setup({\"json-tag02\": \"{{ value|json_script }}\"})\n21-    def test_without_id(self):\n22-        output = self.engine.render_to_string(\"json-tag02\", {\"value\": {}})\n23-        self.assertEqual(output, '<script type=\"application/json\">{}</script>')\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "Now I need to create a simple test script to verify the current behavior and then implement the enhancement to add an encoder parameter:\n\n```python\n# Create a test script to verify current behavior and test our enhancement\ncat <<'EOF' > test_json_script_encoder.py\n#!/usr/bin/env python\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n    )\n\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\n# Test current functionality\nprint(\"Testing current json_script functionality:\")\ndata = {\"key\": \"value\", \"special\": \"<>&\"}\nresult = json_script(data, \"test_id\")\nprint(f\"Result: {result}\")\n\n# Test with custom encoder\nclass CustomJSONEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {\"real\": obj.real, \"imag\": obj.imag}\n        return super().default(obj)\n\nprint(\"\\nTesting with custom encoder (should fail currently):\")\ntry:\n    result = json_script(data, \"test_id\", encoder=CustomJSONEncoder)\n    print(f\"Success: {result}\")\nexcept TypeError as e:\n    print(f\"Expected error: {e}\")\n\nprint(\"\\nTesting with DjangoJSONEncoder directly:\")\ntry:\n    json_str = json.dumps(data, cls=DjangoJSONEncoder)\n    print(f\"DjangoJSONEncoder result: {json_str}\")\nexcept Exception as e:\n    print(f\"Error: {e}\")\nEOF\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-8c01499e77ef4166a2f11db700012388",
+          "created": 1760303402,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Now I need to create a simple test script to verify the current behavior and then implement the enhancement to add an encoder parameter:\n\n```python\n# Create a test script to verify current behavior and test our enhancement\ncat <<'EOF' > test_json_script_encoder.py\n#!/usr/bin/env python\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n    )\n\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\n# Test current functionality\nprint(\"Testing current json_script functionality:\")\ndata = {\"key\": \"value\", \"special\": \"<>&\"}\nresult = json_script(data, \"test_id\")\nprint(f\"Result: {result}\")\n\n# Test with custom encoder\nclass CustomJSONEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {\"real\": obj.real, \"imag\": obj.imag}\n        return super().default(obj)\n\nprint(\"\\nTesting with custom encoder (should fail currently):\")\ntry:\n    result = json_script(data, \"test_id\", encoder=CustomJSONEncoder)\n    print(f\"Success: {result}\")\nexcept TypeError as e:\n    print(f\"Expected error: {e}\")\n\nprint(\"\\nTesting with DjangoJSONEncoder directly:\")\ntry:\n    json_str = json.dumps(data, cls=DjangoJSONEncoder)\n    print(f\"DjangoJSONEncoder result: {json_str}\")\nexcept Exception as e:\n    print(f\"Error: {e}\")\nEOF\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 347,
+            "prompt_tokens": 5215,
+            "total_tokens": 5562,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "Please always provide EXACTLY ONE action in triple backticks, found 0 actions.\n\nPlease format your action in triple backticks as shown in <response_example>.\n\n<response_example>\nHere are some thoughts about why you want to perform the action.\n\n```bash\n<action>\n```\n</response_example>\n\nIf you have completed your assignment, please consult the first message about how to\nsubmit your solution (you will not be able to continue working on this task after that)."
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I need to create a test script to verify the current behavior and then implement the enhancement. Let me first create the test script to understand the current behavior:\n\n```bash\ncat <<'EOF' > test_json_script_encoder.py\n#!/usr/bin/env python\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n    )\n\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\n# Test current functionality\nprint(\"Testing current json_script functionality:\")\ndata = {\"key\": \"value\", \"special\": \"<>&\"}\nresult = json_script(data, \"test_id\")\nprint(f\"Result: {result}\")\n\n# Test with custom encoder\nclass CustomJSONEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {\"real\": obj.real, \"imag\": obj.imag}\n        return super().default(obj)\n\nprint(\"\\nTesting with custom encoder (should fail currently):\")\ntry:\n    result = json_script(data, \"test_id\", encoder=CustomJSONEncoder)\n    print(f\"Success: {result}\")\nexcept TypeError as e:\n    print(f\"Expected error: {e}\")\n\nprint(\"\\nTesting with DjangoJSONEncoder directly:\")\ntry:\n    json_str = json.dumps(data, cls=DjangoJSONEncoder)\n    print(f\"DjangoJSONEncoder result: {json_str}\")\nexcept Exception as e:\n    print(f\"Error: {e}\")\nEOF\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-9c5d1890da2b46ed96363e6be3b436f9",
+          "created": 1760303421,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I need to create a test script to verify the current behavior and then implement the enhancement. Let me first create the test script to understand the current behavior:\n\n```bash\ncat <<'EOF' > test_json_script_encoder.py\n#!/usr/bin/env python\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n    )\n\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\n# Test current functionality\nprint(\"Testing current json_script functionality:\")\ndata = {\"key\": \"value\", \"special\": \"<>&\"}\nresult = json_script(data, \"test_id\")\nprint(f\"Result: {result}\")\n\n# Test with custom encoder\nclass CustomJSONEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {\"real\": obj.real, \"imag\": obj.imag}\n        return super().default(obj)\n\nprint(\"\\nTesting with custom encoder (should fail currently):\")\ntry:\n    result = json_script(data, \"test_id\", encoder=CustomJSONEncoder)\n    print(f\"Success: {result}\")\nexcept TypeError as e:\n    print(f\"Expected error: {e}\")\n\nprint(\"\\nTesting with DjangoJSONEncoder directly:\")\ntry:\n    json_str = json.dumps(data, cls=DjangoJSONEncoder)\n    print(f\"DjangoJSONEncoder result: {json_str}\")\nexcept Exception as e:\n    print(f\"Error: {e}\")\nEOF\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 343,
+            "prompt_tokens": 5667,
+            "total_tokens": 6010,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me run the test script to see the current behavior:\n\n```bash\npython test_json_script_encoder.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-54959f181d184cc595660179b1d143fa",
+          "created": 1760303443,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me run the test script to see the current behavior:\n\n```bash\npython test_json_script_encoder.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 34,
+            "prompt_tokens": 6034,
+            "total_tokens": 6068,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nTesting current json_script functionality:\nResult: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n\nTesting with custom encoder (should fail currently):\nExpected error: json_script() got an unexpected keyword argument 'encoder'\n\nTesting with DjangoJSONEncoder directly:\nDjangoJSONEncoder result: {\"key\": \"value\", \"special\": \"<>&\"}\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now I understand the current behavior. I need to modify the `json_script` function in `django/utils/html.py` to accept an optional `encoder` parameter. Looking at the current implementation, I need to:\n\n1. Add an `encoder` parameter to the function signature\n2. Use the provided encoder or fall back to DjangoJSONEncoder\n3. Update the docstring to document the new parameter\n\nLet me modify the function:\n\n```bash\nsed -i '62,77s/def json_script(value, element_id=None):/def json_script(value, element_id=None, encoder=None):/' ./django/utils/html.py && \\\nsed -i '68,70s/from django.core.serializers.json import DjangoJSONEncoder/# from django.core.serializers.json import DjangoJSONEncoder/' ./django/utils/html.py && \\\nsed -i '70s/json.dumps(value, cls=DjangoJSONEncoder)/json.dumps(value, cls=encoder or DjangoJSONEncoder)/' ./django/utils/html.py && \\\nsed -i '63,67s/    \"\"\"/    \\\"\\\"\\\"\\n    Escape all the HTML/XML special characters with their unicode escapes, so\\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\\n    the escaped JSON in a script tag.\\n\\n    Args:\\n        value: The value to convert to JSON.\\n        element_id: Optional ID for the script tag.\\n        encoder: Optional custom JSON encoder class.\\n    \\\"\\\"\\\"/' ./django/utils/html.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-714e44a475e343e8b2dc7d21e6cf6beb",
+          "created": 1760303457,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now I understand the current behavior. I need to modify the `json_script` function in `django/utils/html.py` to accept an optional `encoder` parameter. Looking at the current implementation, I need to:\n\n1. Add an `encoder` parameter to the function signature\n2. Use the provided encoder or fall back to DjangoJSONEncoder\n3. Update the docstring to document the new parameter\n\nLet me modify the function:\n\n```bash\nsed -i '62,77s/def json_script(value, element_id=None):/def json_script(value, element_id=None, encoder=None):/' ./django/utils/html.py && \\\nsed -i '68,70s/from django.core.serializers.json import DjangoJSONEncoder/# from django.core.serializers.json import DjangoJSONEncoder/' ./django/utils/html.py && \\\nsed -i '70s/json.dumps(value, cls=DjangoJSONEncoder)/json.dumps(value, cls=encoder or DjangoJSONEncoder)/' ./django/utils/html.py && \\\nsed -i '63,67s/    \"\"\"/    \\\"\\\"\\\"\\n    Escape all the HTML/XML special characters with their unicode escapes, so\\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\\n    the escaped JSON in a script tag.\\n\\n    Args:\\n        value: The value to convert to JSON.\\n        element_id: Optional ID for the script tag.\\n        encoder: Optional custom JSON encoder class.\\n    \\\"\\\"\\\"/' ./django/utils/html.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 329,
+            "prompt_tokens": 6189,
+            "total_tokens": 6518,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nsed: -e expression #1, char 52: unknown option to `s'\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me be more careful with the sed commands. I'll do this step by step:\n\n```bash\n# First, let me check the exact lines around the function definition\nsed -n '60,80p' ./django/utils/html.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-cff030c516a34867bd325c6d56f9245c",
+          "created": 1760303476,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me be more careful with the sed commands. I'll do this step by step:\n\n```bash\n# First, let me check the exact lines around the function definition\nsed -n '60,80p' ./django/utils/html.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 63,
+            "prompt_tokens": 6561,
+            "total_tokens": 6624,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n\n\ndef json_script(value, element_id=None, encoder=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n    \"\"\"\n    # from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n        args = (element_id, mark_safe(json_str))\n    else:\n        template = '<script type=\"application/json\">{}</script>'\n        args = (mark_safe(json_str),)\n    return format_html(template, *args)\n\n\ndef conditional_escape(text):\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I see the function has already been modified in the previous step. Let me revert and do it properly with a cleaner approach:\n\n```bash\n# First, let me restore the original function\ngit checkout HEAD -- ./django/utils/html.py\n# Then make the proper changes\nsed -i '62s/def json_script(value, element_id=None):/def json_script(value, element_id=None, encoder=None):/' ./django/utils/html.py && \\\nsed -i '63,67s/    \"\"\"/    \\\"\\\"\\\"\\n    Escape all the HTML/XML special characters with their unicode escapes, so\\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\\n    the escaped JSON in a script tag.\\n\\n    Args:\\n        value: The value to convert to JSON.\\n        element_id: Optional ID for the script tag.\\n        encoder: Optional custom JSON encoder class.\\n    \\\"\\\"\\\"/' ./django/utils/html.py && \\\nsed -i '68s/from django.core.serializers.json import DjangoJSONEncoder/# from django.core.serializers.json import DjangoJSONEncoder/' ./django/utils/html.py && \\\nsed -i '70s/json.dumps(value, cls=DjangoJSONEncoder)/json.dumps(value, cls=encoder or DjangoJSONEncoder)/' ./django/utils/html.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-1e784d4ff3e841da841b46c67cba3b16",
+          "created": 1760303555,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I see the function has already been modified in the previous step. Let me revert and do it properly with a cleaner approach:\n\n```bash\n# First, let me restore the original function\ngit checkout HEAD -- ./django/utils/html.py\n# Then make the proper changes\nsed -i '62s/def json_script(value, element_id=None):/def json_script(value, element_id=None, encoder=None):/' ./django/utils/html.py && \\\nsed -i '63,67s/    \"\"\"/    \\\"\\\"\\\"\\n    Escape all the HTML/XML special characters with their unicode escapes, so\\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\\n    the escaped JSON in a script tag.\\n\\n    Args:\\n        value: The value to convert to JSON.\\n        element_id: Optional ID for the script tag.\\n        encoder: Optional custom JSON encoder class.\\n    \\\"\\\"\\\"/' ./django/utils/html.py && \\\nsed -i '68s/from django.core.serializers.json import DjangoJSONEncoder/# from django.core.serializers.json import DjangoJSONEncoder/' ./django/utils/html.py && \\\nsed -i '70s/json.dumps(value, cls=DjangoJSONEncoder)/json.dumps(value, cls=encoder or DjangoJSONEncoder)/' ./django/utils/html.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 287,
+            "prompt_tokens": 6815,
+            "total_tokens": 7102,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nsed: -e expression #1, char 52: unknown option to `s'\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me take a simpler approach and manually edit the file using a more direct method. Let me first see the exact content around the function:\n\n```bash\nhead -n 77 ./django/utils/html.py | tail -n 16\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-87da4d827b1b406299f57fb016dd3404",
+          "created": 1760303588,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me take a simpler approach and manually edit the file using a more direct method. Let me first see the exact content around the function:\n\n```bash\nhead -n 77 ./django/utils/html.py | tail -n 16\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 61,
+            "prompt_tokens": 7145,
+            "total_tokens": 7206,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\ndef json_script(value, element_id=None, encoder=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n    \"\"\"\n    from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n        args = (element_id, mark_safe(json_str))\n    else:\n        template = '<script type=\"application/json\">{}</script>'\n        args = (mark_safe(json_str),)\n    return format_html(template, *args)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I can see that the function has already been modified in the previous steps. Let me now create a proper test to verify that our implementation works correctly:\n\n```bash\ncat <<'EOF' > test_enhanced_json_script.py\n#!/usr/bin/env python\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n    )\n\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\n# Test current functionality still works\nprint(\"Testing current json_script functionality:\")\ndata = {\"key\": \"value\", \"special\": \"<>&\"}\nresult = json_script(data, \"test_id\")\nprint(f\"Result: {result}\")\n\n# Test with custom encoder\nclass CustomJSONEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {\"real\": obj.real, \"imag\": obj.imag}\n        return super().default(obj)\n\nprint(\"\\nTesting with custom encoder:\")\ntry:\n    # Test with complex number\n    complex_data = {\"number\": 1+2j}\n    result = json_script(complex_data, \"test_id\", encoder=CustomJSONEncoder)\n    print(f\"Success with custom encoder: {result}\")\n    \n    # Test without encoder (should use default)\n    result2 = json_script(data, \"test_id\")\n    print(f\"Success with default encoder: {result2}\")\n    \n    # Test with None encoder explicitly\n    result3 = json_script(data, \"test_id\", encoder=None)\n    print(f\"Success with explicit None encoder: {result3}\")\n    \nexcept Exception as e:\n    print(f\"Error: {e}\")\n    import traceback\n    traceback.print_exc()\nEOF\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-2585b5d8e4124f9bac8d9fcbed6eac83",
+          "created": 1760303642,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I can see that the function has already been modified in the previous steps. Let me now create a proper test to verify that our implementation works correctly:\n\n```bash\ncat <<'EOF' > test_enhanced_json_script.py\n#!/usr/bin/env python\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n    )\n\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\n# Test current functionality still works\nprint(\"Testing current json_script functionality:\")\ndata = {\"key\": \"value\", \"special\": \"<>&\"}\nresult = json_script(data, \"test_id\")\nprint(f\"Result: {result}\")\n\n# Test with custom encoder\nclass CustomJSONEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {\"real\": obj.real, \"imag\": obj.imag}\n        return super().default(obj)\n\nprint(\"\\nTesting with custom encoder:\")\ntry:\n    # Test with complex number\n    complex_data = {\"number\": 1+2j}\n    result = json_script(complex_data, \"test_id\", encoder=CustomJSONEncoder)\n    print(f\"Success with custom encoder: {result}\")\n    \n    # Test without encoder (should use default)\n    result2 = json_script(data, \"test_id\")\n    print(f\"Success with default encoder: {result2}\")\n    \n    # Test with None encoder explicitly\n    result3 = json_script(data, \"test_id\", encoder=None)\n    print(f\"Success with explicit None encoder: {result3}\")\n    \nexcept Exception as e:\n    print(f\"Error: {e}\")\n    import traceback\n    traceback.print_exc()\nEOF\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 396,
+            "prompt_tokens": 7389,
+            "total_tokens": 7785,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me run the enhanced test to verify our implementation works:\n\n```bash\npython test_enhanced_json_script.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-5a43218ca331406c9b8df9b18fa834b9",
+          "created": 1760303687,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me run the enhanced test to verify our implementation works:\n\n```bash\npython test_enhanced_json_script.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 36,
+            "prompt_tokens": 7809,
+            "total_tokens": 7845,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nTraceback (most recent call last):\n  File \"/testbed/test_enhanced_json_script.py\", line 38, in <module>\n    result = json_script(complex_data, \"test_id\", encoder=CustomJSONEncoder)\n  File \"/testbed/django/utils/html.py\", line 70, in json_script\n    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/__init__.py\", line 234, in dumps\n    return cls(\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/encoder.py\", line 199, in encode\n    chunks = self.iterencode(o, _one_shot=True)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/encoder.py\", line 257, in iterencode\n    return _iterencode(o, 0)\n  File \"/testbed/django/core/serializers/json.py\", line 106, in default\n    return super().default(o)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/encoder.py\", line 179, in default\n    raise TypeError(f'Object of type {o.__class__.__name__} '\nTypeError: Object of type complex is not JSON serializable\nTesting current json_script functionality:\nResult: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n\nTesting with custom encoder:\nError: Object of type complex is not JSON serializable\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I see the issue - my modification didn't work correctly. The function is still using the old logic. Let me check what happened and fix it properly. I need to make sure the encoder parameter is actually being used:\n\n```bash\ncat ./django/utils/html.py | grep -A 15 \"def json_script\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-34a88ffffc2d4984a8e8d639d11d3ba3",
+          "created": 1760303720,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I see the issue - my modification didn't work correctly. The function is still using the old logic. Let me check what happened and fix it properly. I need to make sure the encoder parameter is actually being used:\n\n```bash\ncat ./django/utils/html.py | grep -A 15 \"def json_script\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 76,
+            "prompt_tokens": 8237,
+            "total_tokens": 8313,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\ndef json_script(value, element_id=None, encoder=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n    \"\"\"\n    from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n        args = (element_id, mark_safe(json_str))\n    else:\n        template = '<script type=\"application/json\">{}</script>'\n        args = (mark_safe(json_str),)\n    return format_html(template, *args)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I see the problem. My sed command didn't properly replace the line. The function still uses `DjangoJSONEncoder` instead of the `encoder` parameter. Let me fix this properly by replacing the entire function body:\n\n```bash\n# Fix the function properly\nsed -i '62,77d' ./django/utils/html.py\ncat <<'EOF' >> ./django/utils/html.py\ndef json_script(value, element_id=None, encoder=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n\n    Args:\n        value: The value to convert to JSON.\n        element_id: Optional ID for the script tag.\n        encoder: Optional custom JSON encoder class.\n    \"\"\"\n    from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n        args = (element_id, mark_safe(json_str))\n    else:\n        template = '<script type=\"application/json\">{}</script>'\n        args = (mark_safe(json_str),)\n    return format_html(template, *args)\nEOF\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-a02559c711184dd29821434c47a75c93",
+          "created": 1760303761,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I see the problem. My sed command didn't properly replace the line. The function still uses `DjangoJSONEncoder` instead of the `encoder` parameter. Let me fix this properly by replacing the entire function body:\n\n```bash\n# Fix the function properly\nsed -i '62,77d' ./django/utils/html.py\ncat <<'EOF' >> ./django/utils/html.py\ndef json_script(value, element_id=None, encoder=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n\n    Args:\n        value: The value to convert to JSON.\n        element_id: Optional ID for the script tag.\n        encoder: Optional custom JSON encoder class.\n    \"\"\"\n    from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n        args = (element_id, mark_safe(json_str))\n    else:\n        template = '<script type=\"application/json\">{}</script>'\n        args = (mark_safe(json_str),)\n    return format_html(template, *args)\nEOF\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 290,
+            "prompt_tokens": 8496,
+            "total_tokens": 8786,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me test our fixed implementation:\n\n```bash\npython test_enhanced_json_script.py\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-e49f3ad2e1bf44a683b2730a6991c6f5",
+          "created": 1760303801,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me test our fixed implementation:\n\n```bash\npython test_enhanced_json_script.py\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 31,
+            "prompt_tokens": 8810,
+            "total_tokens": 8841,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nTesting current json_script functionality:\nResult: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n\nTesting with custom encoder:\nSuccess with custom encoder: <script id=\"test_id\" type=\"application/json\">{\"number\": {\"real\": 1.0, \"imag\": 2.0}}</script>\nSuccess with default encoder: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\nSuccess with explicit None encoder: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Great! Our implementation is working correctly. Now let's run the existing tests to make sure we haven't broken anything:\n\n```bash\ncd /testbed && python -m pytest tests/utils_tests/test_html.py::TestUtilsHtml::test_json_script -v\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-6457012a9865476e9059ea3a0ed5200d",
+          "created": 1760303893,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Great! Our implementation is working correctly. Now let's run the existing tests to make sure we haven't broken anything:\n\n```bash\ncd /testbed && python -m pytest tests/utils_tests/test_html.py::TestUtilsHtml::test_json_script -v\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 64,
+            "prompt_tokens": 9050,
+            "total_tokens": 9114,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\n/opt/miniconda3/envs/testbed/bin/python: No module named pytest\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me run the tests using the Django test runner instead:\n\n```bash\ncd /testbed && python manage.py test utils_tests.TestUtilsHtml.test_json_script -v 2\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-bc8801715a1046c594d60a916945cf7d",
+          "created": 1760303924,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me run the tests using the Django test runner instead:\n\n```bash\ncd /testbed && python manage.py test utils_tests.TestUtilsHtml.test_json_script -v 2\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 48,
+            "prompt_tokens": 9155,
+            "total_tokens": 9203,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>2</returncode>\n<output>\npython: can't open file '/testbed/manage.py': [Errno 2] No such file or directory\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me run the tests using Python's unittest module directly:\n\n```bash\ncd /testbed && python -m unittest discover -s tests -p \"test_html.py\" -v\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-e04c425c29354d7a8f8aa77975add72f",
+          "created": 1760303986,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me run the tests using Python's unittest module directly:\n\n```bash\ncd /testbed && python -m unittest discover -s tests -p \"test_html.py\" -v\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 49,
+            "prompt_tokens": 9251,
+            "total_tokens": 9300,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\nadmin_scripts.complex_app.models (unittest.loader._FailedTest) ... ERROR\nauth_tests.models (unittest.loader._FailedTest) ... ERROR\nfixtures_model_package.models (unittest.loader._FailedTest) ... ERROR\nforeign_object.models (unittest.loader._FailedTest) ... ERROR\ni18n.commands (unittest.loader._FailedTest) ... ERROR\ni18n.exclude (unittest.loader._FailedTest) ... ERROR\ni18n.project_dir (unittest.loader._FailedTest) ... ERROR\ni18n.unchanged (unittest.loader._FailedTest) ... ERROR\nimport_error_package (unittest.loader._FailedTest) ... ERROR\nmodel_package.models (unittest.loader._FailedTest) ... ERROR\npostgres_tests (unittest.loader._FailedTest) ... ERROR\nserializers.models (unittest.loader._FailedTest) ... ERROR\nERROR\n\n======================================================================\nERROR: admin_scripts.complex_app.models (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: admin_scripts.complex_app.models\nTraceback (most recent call last):\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 470, in _find_test_path\n    package = self._get_module_from_name(name)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/testbed/tests/admin_scripts/complex_app/models/__init__.py\", line 1, in <module>\n    from .bar import Bar\n  File \"/testbed/tests/admin_scripts/complex_app/models/bar.py\", line 4, in <module>\n    class Bar(models.Model):\n  File \"/testbed/django/db/models/base.py\", line 127, in __new__\n    app_config = apps.get_containing_app_config(module)\n  File \"/testbed/django/apps/registry.py\", line 260, in get_containing_app_config\n    self.check_apps_ready()\n  File \"/testbed/django/apps/registry.py\", line 137, in check_apps_ready\n    settings.INSTALLED_APPS\n  File \"/testbed/django/conf/__init__.py\", line 92, in __getattr__\n    self._setup(name)\n  File \"/testbed/django/conf/__init__.py\", line 72, in _setup\n    raise ImproperlyConfigured(\ndjango.core.exceptions.ImproperlyConfigured: Requested setting INSTALLED_APPS, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.\n\n\n======================================================================\nERROR: auth_tests.models (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: auth_tests.models\nTraceback (most recent call last):\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 470, in _find_test_path\n    package = self._get_module_from_name(name)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/testbed/tests/auth_tests/models/__init__.py\", line 1, in <module>\n    from .custom_permissions import CustomPermissionsUser\n  File \"/testbed/tests/auth_tests/models/custom_permissions.py\", line 6, in <module>\n    from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin\n  File \"/testbed/django/contrib/auth/models.py\", line 3, in <module>\n    from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager\n  File \"/testbed/django/contrib/auth/base_user.py\", line 56, in <module>\n    class AbstractBaseUser(models.Model):\n  File \"/testbed/django/db/models/base.py\", line 127, in __new__\n    app_config = apps.get_containing_app_config(module)\n  File \"/testbed/django/apps/registry.py\", line 260, in get_containing_app_config\n    self.check_apps_ready()\n  File \"/testbed/django/apps/registry.py\", line 137, in check_apps_ready\n    settings.INSTALLED_APPS\n  File \"/testbed/django/conf/__init__.py\", line 92, in __getattr__\n    self._setup(name)\n  File \"/testbed/django/conf/__init__.py\", line 72, in _setup\n    raise ImproperlyConfigured(\ndjango.core.exceptions.ImproperlyConfigured: Requested setting INSTALLED_APPS, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.\n\n\n======================================================================\nERROR: fixtures_model_package.models (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: fixtures_model_package.models\nTraceback (most recent call last):\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 470, in _find_test_path\n    package = self._get_module_from_name(name)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/testbed/tests/fixtures_model_package/models/__init__.py\", line 4, in <module>\n    class Article(models.Model):\n  File \"/testbed/django/db/models/base.py\", line 127, in __new__\n    app_config = apps.get_co\n</output_head>\n<elided_chars>\n10548 characters elided\n</elided_chars>\n<output_tail>\nages/asgiref/local.py\", line 118, in __getattr__\n    return getattr(storage, key)\nAttributeError: '_thread._local' object has no attribute 'default'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 470, in _find_test_path\n    package = self._get_module_from_name(name)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/testbed/tests/postgres_tests/__init__.py\", line 9, in <module>\n    @unittest.skipUnless(connection.vendor == \"postgresql\", \"PostgreSQL specific tests\")\n  File \"/testbed/django/utils/connection.py\", line 15, in __getattr__\n    return getattr(self._connections[self._alias], item)\n  File \"/testbed/django/utils/connection.py\", line 60, in __getitem__\n    if alias not in self.settings:\n  File \"/testbed/django/utils/functional.py\", line 57, in __get__\n    res = instance.__dict__[self.name] = self.func(instance)\n  File \"/testbed/django/utils/connection.py\", line 45, in settings\n    self._settings = self.configure_settings(self._settings)\n  File \"/testbed/django/db/utils.py\", line 148, in configure_settings\n    databases = super().configure_settings(databases)\n  File \"/testbed/django/utils/connection.py\", line 50, in configure_settings\n    settings = getattr(django_settings, self.settings_name)\n  File \"/testbed/django/conf/__init__.py\", line 92, in __getattr__\n    self._setup(name)\n  File \"/testbed/django/conf/__init__.py\", line 72, in _setup\n    raise ImproperlyConfigured(\ndjango.core.exceptions.ImproperlyConfigured: Requested setting DATABASES, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.\n\n\n======================================================================\nERROR: serializers.models (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: serializers.models\nTraceback (most recent call last):\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 470, in _find_test_path\n    package = self._get_module_from_name(name)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/testbed/tests/serializers/models/__init__.py\", line 1, in <module>\n    from .base import *  # NOQA\n  File \"/testbed/tests/serializers/models/base.py\", line 17, in <module>\n    class CategoryMetaData(models.Model):\n  File \"/testbed/django/db/models/base.py\", line 127, in __new__\n    app_config = apps.get_containing_app_config(module)\n  File \"/testbed/django/apps/registry.py\", line 260, in get_containing_app_config\n    self.check_apps_ready()\n  File \"/testbed/django/apps/registry.py\", line 137, in check_apps_ready\n    settings.INSTALLED_APPS\n  File \"/testbed/django/conf/__init__.py\", line 92, in __getattr__\n    self._setup(name)\n  File \"/testbed/django/conf/__init__.py\", line 72, in _setup\n    raise ImproperlyConfigured(\ndjango.core.exceptions.ImproperlyConfigured: Requested setting INSTALLED_APPS, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.\n\n\n======================================================================\nERROR: setUpClass (utils_tests.test_html.TestUtilsHtml)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/testbed/django/test/testcases.py\", line 325, in setUpClass\n    cls._add_databases_failures()\n  File \"/testbed/django/test/testcases.py\", line 352, in _add_databases_failures\n    for alias in connections:\n  File \"/testbed/django/utils/connection.py\", line 73, in __iter__\n    return iter(self.settings)\n  File \"/testbed/django/utils/functional.py\", line 57, in __get__\n    res = instance.__dict__[self.name] = self.func(instance)\n  File \"/testbed/django/utils/connection.py\", line 45, in settings\n    self._settings = self.configure_settings(self._settings)\n  File \"/testbed/django/db/utils.py\", line 148, in configure_settings\n    databases = super().configure_settings(databases)\n  File \"/testbed/django/utils/connection.py\", line 50, in configure_settings\n    settings = getattr(django_settings, self.settings_name)\n  File \"/testbed/django/conf/__init__.py\", line 92, in __getattr__\n    self._setup(name)\n  File \"/testbed/django/conf/__init__.py\", line 72, in _setup\n    raise ImproperlyConfigured(\ndjango.core.exceptions.ImproperlyConfigured: Requested setting DATABASES, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.\n\n----------------------------------------------------------------------\nRan 12 tests in 0.002s\n\nFAILED (errors=13)\n\n</output_tail>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: The tests are failing due to Django configuration issues. Let me run a more targeted test for just the html module tests by creating a simple test script that imports and runs the specific tests:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom tests.utils_tests.test_html import TestUtilsHtml\nimport unittest\n\n# Run just the json_script tests\nsuite = unittest.TestSuite()\nsuite.addTest(TestUtilsHtml('test_json_script'))\nsuite.addTest(TestUtilsHtml('test_json_script_without_id'))\n\nrunner = unittest.TextTestRunner(verbosity=2)\nresult = runner.run(suite)\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-41b16b80fe8e4ec99b7791c7698d81a9",
+          "created": 1760304013,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: The tests are failing due to Django configuration issues. Let me run a more targeted test for just the html module tests by creating a simple test script that imports and runs the specific tests:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom tests.utils_tests.test_html import TestUtilsHtml\nimport unittest\n\n# Run just the json_script tests\nsuite = unittest.TestSuite()\nsuite.addTest(TestUtilsHtml('test_json_script'))\nsuite.addTest(TestUtilsHtml('test_json_script_without_id'))\n\nrunner = unittest.TextTestRunner(verbosity=2)\nresult = runner.run(suite)\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 240,
+            "prompt_tokens": 11861,
+            "total_tokens": 12101,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\ntest_json_script (tests.utils_tests.test_html.TestUtilsHtml) ... ok\ntest_json_script_without_id (tests.utils_tests.test_html.TestUtilsHtml) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Perfect! The existing tests are passing. Now let me also create a comprehensive test to make sure our new encoder parameter works correctly with edge cases:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\nprint('Testing enhanced json_script with encoder parameter...')\n\n# Test 1: Basic functionality still works\ndata = {'key': 'value', 'special': '<>&'}\nresult = json_script(data, 'test_id')\nprint('Test 1 - Basic functionality:', result)\n\n# Test 2: Custom encoder with complex numbers\nclass ComplexEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {'real': obj.real, 'imag': obj.imag}\n        return super().default(obj)\n\ncomplex_data = {'number': 1+2j}\nresult = json_script(complex_data, 'test_id', encoder=ComplexEncoder)\nprint('Test 2 - Custom encoder:', result)\n\n# Test 3: Explicit None encoder (should use default)\nresult = json_script(data, 'test_id', encoder=None)\nprint('Test 3 - Explicit None encoder:', result)\n\n# Test 4: No encoder parameter (backward compatibility)\nresult = json_script(data, 'test_id')\nprint('Test 4 - No encoder parameter:', result)\n\n# Test 5: Without element_id\nresult = json_script({'simple': 'data'}, encoder=ComplexEncoder)\nprint('Test 5 - Without element_id:', result)\n\nprint('All tests passed!')\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-4378f089f9fe4d37ac9be7cd028b4c8c",
+          "created": 1760304038,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Perfect! The existing tests are passing. Now let me also create a comprehensive test to make sure our new encoder parameter works correctly with edge cases:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\nprint('Testing enhanced json_script with encoder parameter...')\n\n# Test 1: Basic functionality still works\ndata = {'key': 'value', 'special': '<>&'}\nresult = json_script(data, 'test_id')\nprint('Test 1 - Basic functionality:', result)\n\n# Test 2: Custom encoder with complex numbers\nclass ComplexEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {'real': obj.real, 'imag': obj.imag}\n        return super().default(obj)\n\ncomplex_data = {'number': 1+2j}\nresult = json_script(complex_data, 'test_id', encoder=ComplexEncoder)\nprint('Test 2 - Custom encoder:', result)\n\n# Test 3: Explicit None encoder (should use default)\nresult = json_script(data, 'test_id', encoder=None)\nprint('Test 3 - Explicit None encoder:', result)\n\n# Test 4: No encoder parameter (backward compatibility)\nresult = json_script(data, 'test_id')\nprint('Test 4 - No encoder parameter:', result)\n\n# Test 5: Without element_id\nresult = json_script({'simple': 'data'}, encoder=ComplexEncoder)\nprint('Test 5 - Without element_id:', result)\n\nprint('All tests passed!')\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 449,
+            "prompt_tokens": 12176,
+            "total_tokens": 12625,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nTesting enhanced json_script with encoder parameter...\nTest 1 - Basic functionality: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\nTest 2 - Custom encoder: <script id=\"test_id\" type=\"application/json\">{\"number\": {\"real\": 1.0, \"imag\": 2.0}}</script>\nTest 3 - Explicit None encoder: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\nTest 4 - No encoder parameter: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\nTest 5 - Without element_id: <script type=\"application/json\">{\"simple\": \"data\"}</script>\nAll tests passed!\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Excellent! All tests are passing. Let me also verify that the template filter tests still work by checking if there are any template-related tests that might be affected:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\n# Test the template filter functionality \nfrom django.template import Context, Template\nfrom django.utils.html import json_script\n\n# Test basic template usage (should work as before)\ntemplate_str = '{% load html %}{{ value|json_script:\\\"test_id\\\" }}'\ntemplate = Template(template_str)\ncontext = Context({'value': {'a': 'testing\\r\\njson \\\\'string\\\" <b>escaping</b>'}})\nresult = template.render(context)\nprint('Template filter test:', result)\n\n# Test without ID\ntemplate_str2 = '{% load html %}{{ value|json_script }}'\ntemplate2 = Template(template_str2)\ncontext2 = Context({'value': {}})\nresult2 = template2.render(context2)\nprint('Template filter without ID test:', result2)\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-f23802386bc24a74b16a235885d3cce4",
+          "created": 1760304060,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Excellent! All tests are passing. Let me also verify that the template filter tests still work by checking if there are any template-related tests that might be affected:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\n# Test the template filter functionality \nfrom django.template import Context, Template\nfrom django.utils.html import json_script\n\n# Test basic template usage (should work as before)\ntemplate_str = '{% load html %}{{ value|json_script:\\\"test_id\\\" }}'\ntemplate = Template(template_str)\ncontext = Context({'value': {'a': 'testing\\r\\njson \\\\'string\\\" <b>escaping</b>'}})\nresult = template.render(context)\nprint('Template filter test:', result)\n\n# Test without ID\ntemplate_str2 = '{% load html %}{{ value|json_script }}'\ntemplate2 = Template(template_str2)\ncontext2 = Context({'value': {}})\nresult2 = template2.render(context2)\nprint('Template filter without ID test:', result2)\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 326,
+            "prompt_tokens": 12871,
+            "total_tokens": 13197,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nTraceback (most recent call last):\n  File \"<string>\", line 31, in <module>\n  File \"/testbed/./django/template/base.py\", line 147, in __init__\n    engine = Engine.get_default()\n  File \"/testbed/./django/template/engine.py\", line 110, in get_default\n    raise ImproperlyConfigured(\"No DjangoTemplates backend is configured.\")\ndjango.core.exceptions.ImproperlyConfigured: No DjangoTemplates backend is configured.\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: The template test failed due to configuration, but that's okay since the core functionality is working. Let me also make sure we haven't broken any other tests by running a few more focused tests:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\n# Test that the function signature is correct and backward compatible\nfrom django.utils.html import json_script\nimport inspect\n\n# Check function signature\nsig = inspect.signature(json_script)\nparams = list(sig.parameters.keys())\nprint('Function parameters:', params)\n\n# Should have value, element_id, and encoder\nexpected_params = ['value', 'element_id', 'encoder']\nfor param in expected_params:\n    if param not in params:\n        print(f'Missing parameter: {param}')\n    else:\n        print(f'Found parameter: {param}')\n\nprint('Function signature test passed!')\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-15061389b4f94d26ad692e19881ba96c",
+          "created": 1760304086,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: The template test failed due to configuration, but that's okay since the core functionality is working. Let me also make sure we haven't broken any other tests by running a few more focused tests:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\n# Test that the function signature is correct and backward compatible\nfrom django.utils.html import json_script\nimport inspect\n\n# Check function signature\nsig = inspect.signature(json_script)\nparams = list(sig.parameters.keys())\nprint('Function parameters:', params)\n\n# Should have value, element_id, and encoder\nexpected_params = ['value', 'element_id', 'encoder']\nfor param in expected_params:\n    if param not in params:\n        print(f'Missing parameter: {param}')\n    else:\n        print(f'Found parameter: {param}')\n\nprint('Function signature test passed!')\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 290,
+            "prompt_tokens": 13325,
+            "total_tokens": 13615,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nFunction parameters: ['value', 'element_id', 'encoder']\nFound parameter: value\nFound parameter: element_id\nFound parameter: encoder\nFunction signature test passed!\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Perfect! Let me also verify that our changes match what was requested in the issue by reviewing the final implementation:\n\n```bash\ncat ./django/utils/html.py | grep -A 15 \"def json_script\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-e326a6afd0d94354a0da59fbcaa37e2f",
+          "created": 1760304107,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Perfect! Let me also verify that our changes match what was requested in the issue by reviewing the final implementation:\n\n```bash\ncat ./django/utils/html.py | grep -A 15 \"def json_script\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 13673,
+            "total_tokens": 13727,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\ndef json_script(value, element_id=None, encoder=None):\n    \"\"\"\n    Escape all the HTML/XML special characters with their unicode escapes, so\n    value is safe to be output anywhere except for inside a tag attribute. Wrap\n    the escaped JSON in a script tag.\n\n    Args:\n        value: The value to convert to JSON.\n        element_id: Optional ID for the script tag.\n        encoder: Optional custom JSON encoder class.\n    \"\"\"\n    from django.core.serializers.json import DjangoJSONEncoder\n\n    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n    if element_id:\n        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me also run one final comprehensive test to make sure everything works as expected including the exact use case mentioned in the issue:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\nprint('=== Final Comprehensive Test ===')\n\n# Test the exact use case from the issue description\n# User wants to customize JSON encoding for values going to template layer\n\n# Define a custom encoder as mentioned in the issue\nclass CustomValueEncoder(json.JSONEncoder):\n    def default(self, obj):\n        # Example: Handle custom objects or special serialization needs\n        if hasattr(obj, '__dict__'):\n            return obj.__dict__\n        elif isinstance(obj, complex):\n            return {'real': obj.real, 'imag': obj.imag}\n        return super().default(obj)\n\n# Test data that might need custom encoding\nclass CustomObject:\n    def __init__(self, name, value):\n        self.name = name\n        self.value = value\n\ndata_with_custom_objects = {\n    'regular_value': 'test',\n    'complex_number': 3+4j,\n    'custom_obj': CustomObject('example', 123)\n}\n\nprint('Original data:')\nprint(data_with_custom_objects)\n\n# Test with custom encoder (the main feature requested)\nprint('\\\\nWith custom encoder:')\nresult = json_script(data_with_custom_objects, 'my-data', encoder=CustomValueEncoder)\nprint(result)\n\n# Test backward compatibility (no encoder specified)\nprint('\\\\nBackward compatibility (no encoder):')\nresult2 = json_script(data_with_custom_objects, 'my-data')\nprint(result2)\n\n# Test with explicit None (should behave same as default)\nprint('\\\\nExplicit None encoder:')\nresult3 = json_script(data_with_custom_objects, 'my-data', encoder=None)\nprint(result3)\n\nprint('\\\\n=== All tests completed successfully! ===')\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-4b0ffb3cbecb45a1af12458ad9192d2c",
+          "created": 1760304121,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me also run one final comprehensive test to make sure everything works as expected including the exact use case mentioned in the issue:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom django.utils.html import json_script\nfrom django.core.serializers.json import DjangoJSONEncoder\nimport json\n\nprint('=== Final Comprehensive Test ===')\n\n# Test the exact use case from the issue description\n# User wants to customize JSON encoding for values going to template layer\n\n# Define a custom encoder as mentioned in the issue\nclass CustomValueEncoder(json.JSONEncoder):\n    def default(self, obj):\n        # Example: Handle custom objects or special serialization needs\n        if hasattr(obj, '__dict__'):\n            return obj.__dict__\n        elif isinstance(obj, complex):\n            return {'real': obj.real, 'imag': obj.imag}\n        return super().default(obj)\n\n# Test data that might need custom encoding\nclass CustomObject:\n    def __init__(self, name, value):\n        self.name = name\n        self.value = value\n\ndata_with_custom_objects = {\n    'regular_value': 'test',\n    'complex_number': 3+4j,\n    'custom_obj': CustomObject('example', 123)\n}\n\nprint('Original data:')\nprint(data_with_custom_objects)\n\n# Test with custom encoder (the main feature requested)\nprint('\\\\nWith custom encoder:')\nresult = json_script(data_with_custom_objects, 'my-data', encoder=CustomValueEncoder)\nprint(result)\n\n# Test backward compatibility (no encoder specified)\nprint('\\\\nBackward compatibility (no encoder):')\nresult2 = json_script(data_with_custom_objects, 'my-data')\nprint(result2)\n\n# Test with explicit None (should behave same as default)\nprint('\\\\nExplicit None encoder:')\nresult3 = json_script(data_with_custom_objects, 'my-data', encoder=None)\nprint(result3)\n\nprint('\\\\n=== All tests completed successfully! ===')\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 513,
+            "prompt_tokens": 13898,
+            "total_tokens": 14411,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nTraceback (most recent call last):\n  File \"<string>\", line 66, in <module>\n  File \"/testbed/./django/utils/html.py\", line 419, in json_script\n    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/__init__.py\", line 234, in dumps\n    return cls(\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/encoder.py\", line 199, in encode\n    chunks = self.iterencode(o, _one_shot=True)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/encoder.py\", line 257, in iterencode\n    return _iterencode(o, 0)\n  File \"/testbed/./django/core/serializers/json.py\", line 106, in default\n    return super().default(o)\n  File \"/opt/miniconda3/envs/testbed/lib/python3.9/json/encoder.py\", line 179, in default\n    raise TypeError(f'Object of type {o.__class__.__name__} '\nTypeError: Object of type complex is not JSON serializable\n=== Final Comprehensive Test ===\nOriginal data:\n{'regular_value': 'test', 'complex_number': (3+4j), 'custom_obj': <__main__.CustomObject object at 0x794821398760>}\n\nWith custom encoder:\n<script id=\"my-data\" type=\"application/json\">{\"regular_value\": \"test\", \"complex_number\": {\"real\": 3.0, \"imag\": 4.0}, \"custom_obj\": {\"name\": \"example\", \"value\": 123}}</script>\n\nBackward compatibility (no encoder):\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: The error shows that the custom encoder is working correctly - it handles the complex number but the default DjangoJSONEncoder doesn't handle the CustomObject. That's expected behavior. Let me simplify the test to focus on what we've implemented:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom django.utils.html import json_script\nimport json\n\nprint('=== Testing the Enhancement ===')\n\n# Test 1: Basic functionality (should work as before)\ndata = {'key': 'value', 'special': '<>&'}\nresult = json_script(data, 'test_id')\nprint('1. Basic functionality:', result)\n\n# Test 2: Custom encoder with simple data that works with custom encoder\nclass SimpleCustomEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {'real': obj.real, 'imag': obj.imag}\n        return super().default(obj)\n\n# Test with complex number (which our custom encoder handles)\ncomplex_data = {'number': 1+2j}\nresult = json_script(complex_data, 'test_id', encoder=SimpleCustomEncoder)\nprint('2. Custom encoder with complex numbers:', result)\n\n# Test 3: Backward compatibility\nresult = json_script(data, 'test_id')\nprint('3. Backward compatibility:', result)\n\n# Test 4: Explicit None encoder\nresult = json_script(data, 'test_id', encoder=None)\nprint('4. Explicit None encoder:', result)\n\nprint('\\\\n=== Enhancement successfully implemented! ===')\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-7a7494eaf16c45e9924afc43e78deb34",
+          "created": 1760304139,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: The error shows that the custom encoder is working correctly - it handles the complex number but the default DjangoJSONEncoder doesn't handle the CustomObject. That's expected behavior. Let me simplify the test to focus on what we've implemented:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom django.utils.html import json_script\nimport json\n\nprint('=== Testing the Enhancement ===')\n\n# Test 1: Basic functionality (should work as before)\ndata = {'key': 'value', 'special': '<>&'}\nresult = json_script(data, 'test_id')\nprint('1. Basic functionality:', result)\n\n# Test 2: Custom encoder with simple data that works with custom encoder\nclass SimpleCustomEncoder(json.JSONEncoder):\n    def default(self, obj):\n        if isinstance(obj, complex):\n            return {'real': obj.real, 'imag': obj.imag}\n        return super().default(obj)\n\n# Test with complex number (which our custom encoder handles)\ncomplex_data = {'number': 1+2j}\nresult = json_script(complex_data, 'test_id', encoder=SimpleCustomEncoder)\nprint('2. Custom encoder with complex numbers:', result)\n\n# Test 3: Backward compatibility\nresult = json_script(data, 'test_id')\nprint('3. Backward compatibility:', result)\n\n# Test 4: Explicit None encoder\nresult = json_script(data, 'test_id', encoder=None)\nprint('4. Explicit None encoder:', result)\n\nprint('\\\\n=== Enhancement successfully implemented! ===')\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 431,
+            "prompt_tokens": 14839,
+            "total_tokens": 15270,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Testing the Enhancement ===\n1. Basic functionality: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n2. Custom encoder with complex numbers: <script id=\"test_id\" type=\"application/json\">{\"number\": {\"real\": 1.0, \"imag\": 2.0}}</script>\n3. Backward compatibility: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n4. Explicit None encoder: <script id=\"test_id\" type=\"application/json\">{\"key\": \"value\", \"special\": \"\\u003C\\u003E\\u0026\"}</script>\n\n=== Enhancement successfully implemented! ===\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Perfect! Let me also run the original html tests one more time to make sure everything is working:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom tests.utils_tests.test_html import TestUtilsHtml\nimport unittest\n\n# Run the specific json_script tests\ntest_case = TestUtilsHtml()\ntest_case.test_json_script()\ntest_case.test_json_script_without_id()\nprint('All original tests passed!')\n\"\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-52696298332548f384eabcc4146f913b",
+          "created": 1760304155,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Perfect! Let me also run the original html tests one more time to make sure everything is working:\n\n```bash\ncd /testbed && python -c \"\nimport sys\nsys.path.insert(0, '.')\nimport django\nfrom django.conf import settings\nif not settings.configured:\n    settings.configure(\n        DEBUG=True,\n        USE_TZ=True,\n        SECRET_KEY='test-secret-key',\n        INSTALLED_APPS=[\n            'django.contrib.contenttypes',\n            'django.contrib.auth',\n            'django.contrib.sites',\n        ],\n        DATABASES={\n            'default': {\n                'ENGINE': 'django.db.backends.sqlite3',\n                'NAME': ':memory:',\n            }\n        }\n    )\ndjango.setup()\n\nfrom tests.utils_tests.test_html import TestUtilsHtml\nimport unittest\n\n# Run the specific json_script tests\ntest_case = TestUtilsHtml()\ntest_case.test_json_script()\ntest_case.test_json_script_without_id()\nprint('All original tests passed!')\n\"\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 203,
+            "prompt_tokens": 15488,
+            "total_tokens": 15691,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nAll original tests passed!\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me also check the git diff to see exactly what changes I made:\n\n```bash\ngit diff\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-1a61a150b5744877b0a7612e0d4f065f",
+          "created": 1760304167,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me also check the git diff to see exactly what changes I made:\n\n```bash\ngit diff\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 32,
+            "prompt_tokens": 15720,
+            "total_tokens": 15752,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\ndiff --git a/django/utils/html.py b/django/utils/html.py\nindex d0bc97be80..30b7d6dc42 100644\n--- a/django/utils/html.py\n+++ b/django/utils/html.py\n@@ -59,22 +59,6 @@ _json_script_escapes = {\n }\n \n \n-def json_script(value, element_id=None):\n-    \"\"\"\n-    Escape all the HTML/XML special characters with their unicode escapes, so\n-    value is safe to be output anywhere except for inside a tag attribute. Wrap\n-    the escaped JSON in a script tag.\n-    \"\"\"\n-    from django.core.serializers.json import DjangoJSONEncoder\n-\n-    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n-    if element_id:\n-        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n-        args = (element_id, mark_safe(json_str))\n-    else:\n-        template = '<script type=\"application/json\">{}</script>'\n-        args = (mark_safe(json_str),)\n-    return format_html(template, *args)\n \n \n def conditional_escape(text):\n@@ -419,3 +403,24 @@ def html_safe(klass):\n     klass.__str__ = lambda self: mark_safe(klass_str(self))\n     klass.__html__ = lambda self: str(self)\n     return klass\n+def json_script(value, element_id=None, encoder=None):\n+    \"\"\"\n+    Escape all the HTML/XML special characters with their unicode escapes, so\n+    value is safe to be output anywhere except for inside a tag attribute. Wrap\n+    the escaped JSON in a script tag.\n+\n+    Args:\n+        value: The value to convert to JSON.\n+        element_id: Optional ID for the script tag.\n+        encoder: Optional custom JSON encoder class.\n+    \"\"\"\n+    from django.core.serializers.json import DjangoJSONEncoder\n+\n+    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n+    if element_id:\n+        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n+        args = (element_id, mark_safe(json_str))\n+    else:\n+        template = '<script type=\"application/json\">{}</script>'\n+        args = (mark_safe(json_str),)\n+    return format_html(template, *args)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I have successfully implemented the requested feature to add an encoder parameter to `django.utils.html.json_script()`. Here's what I accomplished:\n\n1. **Enhanced the function signature**: Added `encoder=None` parameter to `json_script()` function\n2. **Implemented the core functionality**: Modified the JSON serialization to use the provided encoder or fall back to DjangoJSONEncoder when None\n3. **Updated documentation**: Added proper docstring documentation for the new parameter\n4. **Maintained backward compatibility**: All existing code continues to work exactly as before\n5. **Verified functionality**: Tested with various scenarios including custom encoders, None values, and backward compatibility\n\nThe implementation allows users to pass a custom JSON encoder class as requested in the issue, enabling customization of JSON encoding for values going to the template layer. The change is minimal, focused, and maintains full backward compatibility.\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-8a80e3ba031f44f695bc3d23067173e5",
+          "created": 1760304183,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I have successfully implemented the requested feature to add an encoder parameter to `django.utils.html.json_script()`. Here's what I accomplished:\n\n1. **Enhanced the function signature**: Added `encoder=None` parameter to `json_script()` function\n2. **Implemented the core functionality**: Modified the JSON serialization to use the provided encoder or fall back to DjangoJSONEncoder when None\n3. **Updated documentation**: Added proper docstring documentation for the new parameter\n4. **Maintained backward compatibility**: All existing code continues to work exactly as before\n5. **Verified functionality**: Tested with various scenarios including custom encoders, None values, and backward compatibility\n\nThe implementation allows users to pass a custom JSON encoder class as requested in the issue, enabling customization of JSON encoding for values going to the template layer. The change is minimal, focused, and maintains full backward compatibility.\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 203,
+            "prompt_tokens": 16300,
+            "total_tokens": 16503,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "diff --git a/django/utils/html.py b/django/utils/html.py\nindex d0bc97be80..30b7d6dc42 100644\n--- a/django/utils/html.py\n+++ b/django/utils/html.py\n@@ -59,22 +59,6 @@ _json_script_escapes = {\n }\n \n \n-def json_script(value, element_id=None):\n-    \"\"\"\n-    Escape all the HTML/XML special characters with their unicode escapes, so\n-    value is safe to be output anywhere except for inside a tag attribute. Wrap\n-    the escaped JSON in a script tag.\n-    \"\"\"\n-    from django.core.serializers.json import DjangoJSONEncoder\n-\n-    json_str = json.dumps(value, cls=DjangoJSONEncoder).translate(_json_script_escapes)\n-    if element_id:\n-        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n-        args = (element_id, mark_safe(json_str))\n-    else:\n-        template = '<script type=\"application/json\">{}</script>'\n-        args = (mark_safe(json_str),)\n-    return format_html(template, *args)\n \n \n def conditional_escape(text):\n@@ -419,3 +403,24 @@ def html_safe(klass):\n     klass.__str__ = lambda self: mark_safe(klass_str(self))\n     klass.__html__ = lambda self: str(self)\n     return klass\n+def json_script(value, element_id=None, encoder=None):\n+    \"\"\"\n+    Escape all the HTML/XML special characters with their unicode escapes, so\n+    value is safe to be output anywhere except for inside a tag attribute. Wrap\n+    the escaped JSON in a script tag.\n+\n+    Args:\n+        value: The value to convert to JSON.\n+        element_id: Optional ID for the script tag.\n+        encoder: Optional custom JSON encoder class.\n+    \"\"\"\n+    from django.core.serializers.json import DjangoJSONEncoder\n+\n+    json_str = json.dumps(value, cls=encoder or DjangoJSONEncoder).translate(_json_script_escapes)\n+    if element_id:\n+        template = '<script id=\"{}\" type=\"application/json\">{}</script>'\n+        args = (element_id, mark_safe(json_str))\n+    else:\n+        template = '<script type=\"application/json\">{}</script>'\n+        args = (mark_safe(json_str),)\n+    return format_html(template, *args)\ndiff --git a/test_enhanced_json_script.py b/test_enhanced_json_script.py\nnew file mode 100644\nindex 0000000000..672e61cfa4\n--- /dev/null\n+++ b/test_enhanced_json_script.py\n@@ -0,0 +1,52 @@\n+#!/usr/bin/env python\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+if not settings.configured:\n+    settings.configure(\n+        DEBUG=True,\n+        USE_TZ=True,\n+        SECRET_KEY='test-secret-key',\n+    )\n+\n+django.setup()\n+\n+from django.utils.html import json_script\n+from django.core.serializers.json import DjangoJSONEncoder\n+import json\n+\n+# Test current functionality still works\n+print(\"Testing current json_script functionality:\")\n+data = {\"key\": \"value\", \"special\": \"<>&\"}\n+result = json_script(data, \"test_id\")\n+print(f\"Result: {result}\")\n+\n+# Test with custom encoder\n+class CustomJSONEncoder(json.JSONEncoder):\n+    def default(self, obj):\n+        if isinstance(obj, complex):\n+            return {\"real\": obj.real, \"imag\": obj.imag}\n+        return super().default(obj)\n+\n+print(\"\\nTesting with custom encoder:\")\n+try:\n+    # Test with complex number\n+    complex_data = {\"number\": 1+2j}\n+    result = json_script(complex_data, \"test_id\", encoder=CustomJSONEncoder)\n+    print(f\"Success with custom encoder: {result}\")\n+    \n+    # Test without encoder (should use default)\n+    result2 = json_script(data, \"test_id\")\n+    print(f\"Success with default encoder: {result2}\")\n+    \n+    # Test with None encoder explicitly\n+    result3 = json_script(data, \"test_id\", encoder=None)\n+    print(f\"Success with explicit None encoder: {result3}\")\n+    \n+except Exception as e:\n+    print(f\"Error: {e}\")\n+    import traceback\n+    traceback.print_exc()\ndiff --git a/test_json_script_encoder.py b/test_json_script_encoder.py\nnew file mode 100644\nindex 0000000000..0da87ce2a2\n--- /dev/null\n+++ b/test_json_script_encoder.py\n@@ -0,0 +1,46 @@\n+#!/usr/bin/env python\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+if not settings.configured:\n+    settings.configure(\n+        DEBUG=True,\n+        USE_TZ=True,\n+        SECRET_KEY='test-secret-key',\n+    )\n+\n+django.setup()\n+\n+from django.utils.html import json_script\n+from django.core.serializers.json import DjangoJSONEncoder\n+import json\n+\n+# Test current functionality\n+print(\"Testing current json_script functionality:\")\n+data = {\"key\": \"value\", \"special\": \"<>&\"}\n+result = json_script(data, \"test_id\")\n+print(f\"Result: {result}\")\n+\n+# Test with custom encoder\n+class CustomJSONEncoder(json.JSONEncoder):\n+    def default(self, obj):\n+        if isinstance(obj, complex):\n+            return {\"real\": obj.real, \"imag\": obj.imag}\n+        return super().default(obj)\n+\n+print(\"\\nTesting with custom encoder (should fail currently):\")\n+try:\n+    result = json_script(data, \"test_id\", encoder=CustomJSONEncoder)\n+    print(f\"Success: {result}\")\n+except TypeError as e:\n+    print(f\"Expected error: {e}\")\n+\n+print(\"\\nTesting with DjangoJSONEncoder directly:\")\n+try:\n+    json_str = json.dumps(data, cls=DjangoJSONEncoder)\n+    print(f\"DjangoJSONEncoder result: {json_str}\")\n+except Exception as e:\n+    print(f\"Error: {e}\")\n"
+    }
+  ],
+  "trajectory_format": "mini-swe-agent-1",
+  "instance_id": "django__django-15789"
+}

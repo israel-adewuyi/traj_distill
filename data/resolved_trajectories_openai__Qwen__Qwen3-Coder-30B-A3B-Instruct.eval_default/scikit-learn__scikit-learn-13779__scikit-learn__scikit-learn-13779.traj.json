@@ -1,0 +1,1385 @@
+{
+  "info": {
+    "exit_status": "Submitted",
+    "submission": "diff --git a/sklearn/ensemble/voting.py b/sklearn/ensemble/voting.py\nindex 7afa7180c..3d253b0fc 100644\n--- a/sklearn/ensemble/voting.py\n+++ b/sklearn/ensemble/voting.py\n@@ -78,7 +78,7 @@ class _BaseVoting(_BaseComposition, TransformerMixin):\n \n         if sample_weight is not None:\n             for name, step in self.estimators:\n-                if not has_fit_parameter(step, 'sample_weight'):\n+                if step is not None and not has_fit_parameter(step, \"sample_weight\"):\n                     raise ValueError('Underlying estimator \\'%s\\' does not'\n                                      ' support sample weights.' % name)\n \n",
+    "model_stats": {
+      "instance_cost": 0.6432355000000001,
+      "api_calls": 30
+    },
+    "mini_version": "1.13.2",
+    "config": {
+      "agent": {
+        "system_template": "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n",
+        "instance_template": "<pr_description>\nConsider the following PR description:\n{{task}}\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>\n",
+        "timeout_template": "The last command <command>{{action['action']}}</command> timed out and has been killed.\nThe output of the command was:\n <output>\n{{output}}\n</output>\nPlease try another command and make sure to avoid those requiring interactive input.",
+        "format_error_template": "Please always provide EXACTLY ONE action in triple backticks, found {{actions|length}} actions.\n\nPlease format your action in triple backticks as shown in <response_example>.\n\n<response_example>\nHere are some thoughts about why you want to perform the action.\n\n```bash\n<action>\n```\n</response_example>\n\nIf you have completed your assignment, please consult the first message about how to\nsubmit your solution (you will not be able to continue working on this task after that).\n",
+        "action_observation_template": "<returncode>{{output.returncode}}</returncode>\n{% if output.output | length < 10000 -%}\n<output>\n{{ output.output -}}\n</output>\n{%- else -%}\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning>\n{%- set elided_chars = output.output | length - 10000 -%}\n<output_head>\n{{ output.output[:5000] }}\n</output_head>\n<elided_chars>\n{{ elided_chars }} characters elided\n</elided_chars>\n<output_tail>\n{{ output.output[-5000:] }}\n</output_tail>\n{%- endif -%}\n",
+        "step_limit": 250,
+        "cost_limit": 3.0
+      },
+      "model": {
+        "model_name": "openai/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+        "model_kwargs": {
+          "drop_params": true,
+          "temperature": 0.0,
+          "api_key": "EMPTY"
+        },
+        "litellm_model_registry": "/root/.config/mini-swe-agent/custom_models.json"
+      },
+      "environment": {
+        "image": "docker.io/swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-13779:latest",
+        "cwd": "/testbed",
+        "env": {
+          "PAGER": "cat",
+          "MANPAGER": "cat",
+          "LESS": "-R",
+          "PIP_PROGRESS_BAR": "off",
+          "TQDM_DISABLE": "1"
+        },
+        "forward_env": [],
+        "timeout": 60,
+        "executable": "docker",
+        "run_args": [
+          "--rm"
+        ],
+        "container_timeout": "2h",
+        "pull_timeout": 120
+      },
+      "agent_type": "minisweagent.run.extra.swebench.ProgressTrackingAgent",
+      "model_type": "minisweagent.models.litellm_model.LitellmModel",
+      "environment_type": "minisweagent.environments.docker.DockerEnvironment"
+    }
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected."
+    },
+    {
+      "role": "user",
+      "content": "<pr_description>\nConsider the following PR description:\nVoting estimator will fail at fit if weights are passed and an estimator is None\nBecause we don't check for an estimator to be `None` in `sample_weight` support, `fit` is failing`.\r\n\r\n```python\r\n    X, y = load_iris(return_X_y=True)\r\n    voter = VotingClassifier(\r\n        estimators=[('lr', LogisticRegression()),\r\n                    ('rf', RandomForestClassifier())]\r\n    )\r\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\r\n    voter.set_params(lr=None)\r\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\r\n```\r\n\r\n```\r\nAttributeError: 'NoneType' object has no attribute 'fit'\r\n```\n\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: First, I need to understand the problem better. The issue is with VotingClassifier when an estimator is set to None and sample_weight is provided during fit. Let me first explore the codebase to find the relevant files related to VotingClassifier.\n\n```bash\nfind . -name \"*.py\" -type f | xargs grep -l \"VotingClassifier\" | head -10\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-bec47c8b1a6b41c7ba8f993d38f5e7e7",
+          "created": 1760301625,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: First, I need to understand the problem better. The issue is with VotingClassifier when an estimator is set to None and sample_weight is provided during fit. Let me first explore the codebase to find the relevant files related to VotingClassifier.\n\n```bash\nfind . -name \"*.py\" -type f | xargs grep -l \"VotingClassifier\" | head -10\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 89,
+            "prompt_tokens": 1353,
+            "total_tokens": 1442,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./sklearn/ensemble/tests/test_voting.py\n./sklearn/ensemble/__init__.py\n./sklearn/ensemble/voting.py\n./examples/ensemble/plot_voting_decision_regions.py\n./examples/ensemble/plot_voting_probas.py\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now I need to examine the main voting.py file to understand how VotingClassifier is implemented and where the issue might be occurring. Let me look at the implementation:\n\n```bash\ncat ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-265ef5a55c0642a0b7abd7924d6ab52b",
+          "created": 1760301648,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now I need to examine the main voting.py file to understand how VotingClassifier is implemented and where the issue might be occurring. Let me look at the implementation:\n\n```bash\ncat ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 59,
+            "prompt_tokens": 1520,
+            "total_tokens": 1579,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\n\"\"\"\nSoft Voting/Majority Rule classifier and Voting regressor.\n\nThis module contains:\n - A Soft Voting/Majority Rule classifier for classification estimators.\n - A Voting regressor for regression estimators.\n\"\"\"\n\n# Authors: Sebastian Raschka <se.raschka@gmail.com>,\n#          Gilles Louppe <g.louppe@gmail.com>,\n#          Ramil Nugmanov <stsouko@live.ru>\n#          Mohamed Ali Jamaoui <m.ali.jamaoui@gmail.com>\n#\n# License: BSD 3 clause\n\nimport numpy as np\nfrom abc import abstractmethod\n\nfrom ..base import ClassifierMixin\nfrom ..base import RegressorMixin\nfrom ..base import TransformerMixin\nfrom ..base import clone\nfrom ..preprocessing import LabelEncoder\nfrom ..utils._joblib import Parallel, delayed\nfrom ..utils.validation import has_fit_parameter, check_is_fitted\nfrom ..utils.metaestimators import _BaseComposition\nfrom ..utils import Bunch\n\n\ndef _parallel_fit_estimator(estimator, X, y, sample_weight=None):\n    \"\"\"Private function used to fit an estimator within a job.\"\"\"\n    if sample_weight is not None:\n        estimator.fit(X, y, sample_weight=sample_weight)\n    else:\n        estimator.fit(X, y)\n    return estimator\n\n\nclass _BaseVoting(_BaseComposition, TransformerMixin):\n    \"\"\"Base class for voting.\n\n    Warning: This class should not be used directly. Use derived classes\n    instead.\n    \"\"\"\n    _required_parameters = ['estimators']\n\n    @property\n    def named_estimators(self):\n        return Bunch(**dict(self.estimators))\n\n    @property\n    def _weights_not_none(self):\n        \"\"\"Get the weights of not `None` estimators\"\"\"\n        if self.weights is None:\n            return None\n        return [w for est, w in zip(self.estimators,\n                                    self.weights) if est[1] is not None]\n\n    def _predict(self, X):\n        \"\"\"Collect results from clf.predict calls. \"\"\"\n        return np.asarray([clf.predict(X) for clf in self.estimators_]).T\n\n    @abstractmethod\n    def fit(self, X, y, sample_weight=None):\n        \"\"\"\n        common fit operations.\n        \"\"\"\n        if self.estimators is None or len(self.estimators) == 0:\n            raise AttributeError('Invalid `estimators` attribute, `estimators`'\n                                 ' should be a list of (string, estimator)'\n                                 ' tuples')\n\n        if (self.weights is not None and\n                len(self.weights) != len(self.estimators)):\n            raise ValueError('Number of `estimators` and weights must be equal'\n                             '; got %d weights, %d estimators'\n                             % (len(self.weights), len(self.estimators)))\n\n        if sample_weight is not None:\n            for name, step in self.estimators:\n                if not has_fit_parameter(step, 'sample_weight'):\n                    raise ValueError('Underlying estimator \\'%s\\' does not'\n                                     ' support sample weights.' % name)\n\n        names, clfs = zip(*self.estimators)\n        self._validate_names(names)\n\n        n_isnone = np.sum([clf is None for _, clf in self.estimators])\n        if n_isnone == len(self.estimators):\n            raise ValueError('All estimators are None. At least one is '\n                             'required!')\n\n        self.estimators_ = Parallel(n_jobs=self.n_jobs)(\n                delayed(_parallel_fit_estimator)(clone(clf), X, y,\n                                                 sample_weight=sample_weight)\n                for clf in clfs if clf is not None)\n\n        self.named_estimators_ = Bunch()\n        for k, e in zip(self.estimators, self.estimators_):\n            self.named_estimators_[k[0]] = e\n        return self\n\n    def set_params(self, **params):\n        \"\"\" Setting the parameters for the ensemble estimator\n\n        Valid parameter keys can be listed with get_params().\n\n        Parameters\n        ----------\n        **params : keyword arguments\n            Specific parameters using e.g. set_params(parameter_name=new_value)\n            In addition, to setting the parameters of the ensemble estimator,\n            the individual estimators of the ensemble estimator can also be\n            set or replaced by setting them to None.\n\n        Examples\n        --------\n        # In this example, the RandomForestClassifier is removed\n        clf1 = LogisticRegression()\n        clf2 = RandomForestClassifier()\n        eclf = VotingClassifier(estimators=[('lr', clf1), ('rf', clf2)]\n        eclf.set_params(rf=None)\n        \"\"\"\n        return self._set_params('estimators', **params)\n\n    def get_params(self, deep=True):\n        \"\"\" Get the parameters of the ensemble estimator\n\n        Parameters\n        ----------\n        deep : bool\n            Setting it to True gets the various estimators and the parameters\n            of the estimators as well\n        \"\"\"\n        return self._get_params('estimators', deep=deep)\n\n\nclass VotingClassifier(_BaseVoting, ClassifierMixin):\n    \"\"\"Soft Voting/Majority Rule classifier for unfitted estimators.\n\n    .. versionadded:: 0.1\n</output_head>\n<elided_chars>\n7578 characters elided\n</elided_chars>\n<output_tail>\nturns array-like of shape (n_classifiers, n_samples *\n                n_classes), being class probabilities calculated by each\n                classifier.\n            If `voting='soft' and `flatten_transform=False`:\n                array-like of shape (n_classifiers, n_samples, n_classes)\n            If `voting='hard'`:\n                array-like of shape (n_samples, n_classifiers), being\n                class labels predicted by each classifier.\n        \"\"\"\n        check_is_fitted(self, 'estimators_')\n\n        if self.voting == 'soft':\n            probas = self._collect_probas(X)\n            if not self.flatten_transform:\n                return probas\n            return np.hstack(probas)\n\n        else:\n            return self._predict(X)\n\n\nclass VotingRegressor(_BaseVoting, RegressorMixin):\n    \"\"\"Prediction voting regressor for unfitted estimators.\n\n    .. versionadded:: 0.21\n\n    A voting regressor is an ensemble meta-estimator that fits base\n    regressors each on the whole dataset. It, then, averages the individual\n    predictions to form a final prediction.\n\n    Read more in the :ref:`User Guide <voting_regressor>`.\n\n    Parameters\n    ----------\n    estimators : list of (string, estimator) tuples\n        Invoking the ``fit`` method on the ``VotingRegressor`` will fit\n        clones of those original estimators that will be stored in the class\n        attribute ``self.estimators_``. An estimator can be set to `None`\n        using ``set_params``.\n\n    weights : array-like, shape (n_regressors,), optional (default=`None`)\n        Sequence of weights (`float` or `int`) to weight the occurrences of\n        predicted values before averaging. Uses uniform weights if `None`.\n\n    n_jobs : int or None, optional (default=None)\n        The number of jobs to run in parallel for ``fit``.\n        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.\n        ``-1`` means using all processors. See :term:`Glossary <n_jobs>`\n        for more details.\n\n    Attributes\n    ----------\n    estimators_ : list of regressors\n        The collection of fitted sub-estimators as defined in ``estimators``\n        that are not `None`.\n\n    named_estimators_ : Bunch object, a dictionary with attribute access\n        Attribute to access any fitted sub-estimators by name.\n\n    Examples\n    --------\n    >>> import numpy as np\n    >>> from sklearn.linear_model import LinearRegression\n    >>> from sklearn.ensemble import RandomForestRegressor\n    >>> from sklearn.ensemble import VotingRegressor\n    >>> r1 = LinearRegression()\n    >>> r2 = RandomForestRegressor(n_estimators=10, random_state=1)\n    >>> X = np.array([[1, 1], [2, 4], [3, 9], [4, 16], [5, 25], [6, 36]])\n    >>> y = np.array([2, 6, 12, 20, 30, 42])\n    >>> er = VotingRegressor([('lr', r1), ('rf', r2)])\n    >>> print(er.fit(X, y).predict(X))\n    [ 3.3  5.7 11.8 19.7 28.  40.3]\n\n    See also\n    --------\n    VotingClassifier: Soft Voting/Majority Rule classifier.\n    \"\"\"\n\n    def __init__(self, estimators, weights=None, n_jobs=None):\n        self.estimators = estimators\n        self.weights = weights\n        self.n_jobs = n_jobs\n\n    def fit(self, X, y, sample_weight=None):\n        \"\"\" Fit the estimators.\n\n        Parameters\n        ----------\n        X : {array-like, sparse matrix}, shape (n_samples, n_features)\n            Training vectors, where n_samples is the number of samples and\n            n_features is the number of features.\n\n        y : array-like, shape (n_samples,)\n            Target values.\n\n        sample_weight : array-like, shape (n_samples,) or None\n            Sample weights. If None, then samples are equally weighted.\n            Note that this is supported only if all underlying estimators\n            support sample weights.\n\n        Returns\n        -------\n        self : object\n        \"\"\"\n        return super().fit(X, y, sample_weight)\n\n    def predict(self, X):\n        \"\"\"Predict regression target for X.\n\n        The predicted regression target of an input sample is computed as the\n        mean predicted regression targets of the estimators in the ensemble.\n\n        Parameters\n        ----------\n        X : {array-like, sparse matrix} of shape (n_samples, n_features)\n            The input samples.\n\n        Returns\n        -------\n        y : array of shape (n_samples,)\n            The predicted values.\n        \"\"\"\n        check_is_fitted(self, \"estimators_\")\n        return np.average(self._predict(X), axis=1,\n                          weights=self._weights_not_none)\n\n    def transform(self, X):\n        \"\"\"Return predictions for X for each estimator.\n\n        Parameters\n        ----------\n        X : {array-like, sparse matrix}, shape (n_samples, n_features)\n            The input samples.\n\n        Returns\n        -------\n        predictions\n            array-like of shape (n_samples, n_classifiers), being\n            values predicted by each regressor.\n        \"\"\"\n        check_is_fitted(self, 'estimators_')\n        return self._predict(X)\n\n</output_tail>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Looking at the code, I can see the issue. In the `_BaseVoting.fit()` method, there's a problem with how `sample_weight` is handled when some estimators are None. The issue occurs in the `_parallel_fit_estimator` function call. When an estimator is None, it still tries to call `estimator.fit()` on it, which causes the AttributeError. \n\nLooking at the code more carefully, I see that in the `fit` method, there's already logic to filter out None estimators:\n```python\nself.estimators_ = Parallel(n_jobs=self.n_jobs)(\n        delayed(_parallel_fit_estimator)(clone(clf), X, y,\n                                         sample_weight=sample_weight)\n        for clf in clfs if clf is not None)\n```\n\nBut the problem is that the `has_fit_parameter` check happens BEFORE this filtering, so it's checking against ALL estimators including None ones. And also, the `_parallel_fit_estimator` function doesn't handle None estimators properly.\n\nLet me create a test script to reproduce the issue first:\n\n```bash\ncat <<'EOF' > test_issue.py\nfrom sklearn.datasets import load_iris\nfrom sklearn.ensemble import VotingClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\nX, y = load_iris(return_X_y=True)\nvoter = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint(\"First fit successful\")\n\nvoter.set_params(lr=None)\nprint(\"Set lr to None\")\n\ntry:\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"Second fit successful\")\nexcept Exception as e:\n    print(f\"Error: {type(e).__name__}: {e}\")\nEOF\n```\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-ad57f274308d4df1a79fa42710d9c1b7",
+          "created": 1760301659,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Looking at the code, I can see the issue. In the `_BaseVoting.fit()` method, there's a problem with how `sample_weight` is handled when some estimators are None. The issue occurs in the `_parallel_fit_estimator` function call. When an estimator is None, it still tries to call `estimator.fit()` on it, which causes the AttributeError. \n\nLooking at the code more carefully, I see that in the `fit` method, there's already logic to filter out None estimators:\n```python\nself.estimators_ = Parallel(n_jobs=self.n_jobs)(\n        delayed(_parallel_fit_estimator)(clone(clf), X, y,\n                                         sample_weight=sample_weight)\n        for clf in clfs if clf is not None)\n```\n\nBut the problem is that the `has_fit_parameter` check happens BEFORE this filtering, so it's checking against ALL estimators including None ones. And also, the `_parallel_fit_estimator` function doesn't handle None estimators properly.\n\nLet me create a test script to reproduce the issue first:\n\n```bash\ncat <<'EOF' > test_issue.py\nfrom sklearn.datasets import load_iris\nfrom sklearn.ensemble import VotingClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\nX, y = load_iris(return_X_y=True)\nvoter = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint(\"First fit successful\")\n\nvoter.set_params(lr=None)\nprint(\"Set lr to None\")\n\ntry:\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"Second fit successful\")\nexcept Exception as e:\n    print(f\"Error: {type(e).__name__}: {e}\")\nEOF\n```\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 394,
+            "prompt_tokens": 3931,
+            "total_tokens": 4325,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me run the test script to confirm the issue:\n\n```bash\ncd /testbed && python test_issue.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-ff7fa43b446c471f819f851964deb95b",
+          "created": 1760301677,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me run the test script to confirm the issue:\n\n```bash\ncd /testbed && python test_issue.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 39,
+            "prompt_tokens": 4349,
+            "total_tokens": 4388,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nFirst fit successful\nSet lr to None\nError: AttributeError: 'NoneType' object has no attribute 'fit'\n/testbed/sklearn/linear_model/logistic.py:432: FutureWarning: Default solver will be changed to 'lbfgs' in 0.22. Specify a solver to silence this warning.\n  FutureWarning)\n/testbed/sklearn/linear_model/logistic.py:469: FutureWarning: Default multi_class will be changed to 'auto' in 0.22. Specify the multi_class option to silence this warning.\n  \"this warning.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Good! I've reproduced the issue. The error occurs because when we set `lr=None`, the `has_fit_parameter` check is performed on all estimators including the None one, but then later in the parallel fitting, it tries to call `.fit()` on the None estimator.\n\nLooking at the code more carefully, I see the problem is in the `fit` method of `_BaseVoting`. The issue is that the `has_fit_parameter` check happens on all estimators (including None ones) but then the actual fitting only happens on non-None estimators. However, the problem is that when we have a None estimator, we shouldn't even be checking `has_fit_parameter` for it.\n\nLet me look at the exact location of the problem in the code:\n\n```bash\ngrep -n \"has_fit_parameter\" ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-a67b7c3497744a7e82b1d5ba93b98d34",
+          "created": 1760301691,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Good! I've reproduced the issue. The error occurs because when we set `lr=None`, the `has_fit_parameter` check is performed on all estimators including the None one, but then later in the parallel fitting, it tries to call `.fit()` on the None estimator.\n\nLooking at the code more carefully, I see the problem is in the `fit` method of `_BaseVoting`. The issue is that the `has_fit_parameter` check happens on all estimators (including None ones) but then the actual fitting only happens on non-None estimators. However, the problem is that when we have a None estimator, we shouldn't even be checking `has_fit_parameter` for it.\n\nLet me look at the exact location of the problem in the code:\n\n```bash\ngrep -n \"has_fit_parameter\" ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 191,
+            "prompt_tokens": 4614,
+            "total_tokens": 4805,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n25:from ..utils.validation import has_fit_parameter, check_is_fitted\n81:                if not has_fit_parameter(step, 'sample_weight'):\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I found the exact issue. In line 81, the code checks `has_fit_parameter(step, 'sample_weight')` for ALL estimators including the None ones. When `step` is None, this will cause an error. The fix is to only perform this check for non-None estimators. Let me also check if there are any other issues by looking at the full context around that area:\n\n```bash\nsed -n '70,90p' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-20fe495e91084213b199db0b94b88a55",
+          "created": 1760301703,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I found the exact issue. In line 81, the code checks `has_fit_parameter(step, 'sample_weight')` for ALL estimators including the None ones. When `step` is None, this will cause an error. The fix is to only perform this check for non-None estimators. Let me also check if there are any other issues by looking at the full context around that area:\n\n```bash\nsed -n '70,90p' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 120,
+            "prompt_tokens": 4861,
+            "total_tokens": 4981,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n                                 ' should be a list of (string, estimator)'\n                                 ' tuples')\n\n        if (self.weights is not None and\n                len(self.weights) != len(self.estimators)):\n            raise ValueError('Number of `estimators` and weights must be equal'\n                             '; got %d weights, %d estimators'\n                             % (len(self.weights), len(self.estimators)))\n\n        if sample_weight is not None:\n            for name, step in self.estimators:\n                if not has_fit_parameter(step, 'sample_weight'):\n                    raise ValueError('Underlying estimator \\'%s\\' does not'\n                                     ' support sample weights.' % name)\n\n        names, clfs = zip(*self.estimators)\n        self._validate_names(names)\n\n        n_isnone = np.sum([clf is None for _, clf in self.estimators])\n        if n_isnone == len(self.estimators):\n            raise ValueError('All estimators are None. At least one is '\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now I can see the exact problem. The loop that checks `has_fit_parameter` on line 81 iterates through ALL estimators including the None ones. When it encounters a None estimator, calling `has_fit_parameter(None, 'sample_weight')` will fail. The fix is to only check estimators that are not None. Let me implement the fix:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, .sample_weight.):/if step is not None and not has_fit_parameter(step, .sample_weight.):/' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-a8938dceda6c4dedaf4313d575b4a304",
+          "created": 1760301714,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now I can see the exact problem. The loop that checks `has_fit_parameter` on line 81 iterates through ALL estimators including the None ones. When it encounters a None estimator, calling `has_fit_parameter(None, 'sample_weight')` will fail. The fix is to only check estimators that are not None. Let me implement the fix:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, .sample_weight.):/if step is not None and not has_fit_parameter(step, .sample_weight.):/' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 138,
+            "prompt_tokens": 5199,
+            "total_tokens": 5337,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me test if my fix works by running the test script again:\n\n```bash\ncd /testbed && python test_issue.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-71a0ad4c8b134f0592d57fe8b881c830",
+          "created": 1760301729,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me test if my fix works by running the test script again:\n\n```bash\ncd /testbed && python test_issue.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 42,
+            "prompt_tokens": 5361,
+            "total_tokens": 5403,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nTraceback (most recent call last):\n  File \"test_issue.py\", line 2, in <module>\n    from sklearn.ensemble import VotingClassifier\n  File \"/testbed/sklearn/ensemble/__init__.py\", line 19, in <module>\n    from .voting import VotingClassifier\n  File \"/testbed/sklearn/ensemble/voting.py\", line 81\n    if step is not None and not has_fit_parameter(step, .sample_weight.):\n                                                        ^\nSyntaxError: invalid syntax\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I made a syntax error in my sed command. I need to be more careful with the quotes. Let me fix it properly:\n\n```bash\nsed -i \"81s/if not has_fit_parameter(step, 'sample_weight'):/if step is not None and not has_fit_parameter(step, 'sample_weight'):\" ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-580adae02bc54fc79fad4cd11b1cfffb",
+          "created": 1760301749,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I made a syntax error in my sed command. I need to be more careful with the quotes. Let me fix it properly:\n\n```bash\nsed -i \"81s/if not has_fit_parameter(step, 'sample_weight'):/if step is not None and not has_fit_parameter(step, 'sample_weight'):\" ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 88,
+            "prompt_tokens": 5537,
+            "total_tokens": 5625,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nsed: -e expression #1, char 122: unterminated `s' command\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me be more careful with escaping the quotes. Let me first check the exact content around that line:\n\n```bash\nsed -n '80,82p' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-74d4fea8d63a4330b833ce498f3ee9e1",
+          "created": 1760301760,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me be more careful with escaping the quotes. Let me first check the exact content around that line:\n\n```bash\nsed -n '80,82p' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 58,
+            "prompt_tokens": 5670,
+            "total_tokens": 5728,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n            for name, step in self.estimators:\n                if step is not None and not has_fit_parameter(step, .sample_weight.):\n                    raise ValueError('Underlying estimator \\'%s\\' does not'\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I see the issue now. The original line had single quotes around 'sample_weight'. Let me fix it correctly:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, '\\''sample_weight'\\''):/if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-b7fe9049662b47d9982c627b5c7022cc",
+          "created": 1760301771,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I see the issue now. The original line had single quotes around 'sample_weight'. Let me fix it correctly:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, '\\''sample_weight'\\''):/if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 89,
+            "prompt_tokens": 5794,
+            "total_tokens": 5883,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nsed: -e expression #1, char 122: unterminated `s' command\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me take a simpler approach and just manually edit the file to make sure I get it right. First, let me see the exact line:\n\n```bash\nnl -ba ./sklearn/ensemble/voting.py | sed -n '80,85p'\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-700265f3c7084786a5df04330d3aec42",
+          "created": 1760301781,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me take a simpler approach and just manually edit the file to make sure I get it right. First, let me see the exact line:\n\n```bash\nnl -ba ./sklearn/ensemble/voting.py | sed -n '80,85p'\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 69,
+            "prompt_tokens": 5928,
+            "total_tokens": 5997,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n    80\t            for name, step in self.estimators:\n    81\t                if step is not None and not has_fit_parameter(step, .sample_weight.):\n    82\t                    raise ValueError('Underlying estimator \\'%s\\' does not'\n    83\t                                     ' support sample weights.' % name)\n    84\t\n    85\t        names, clfs = zip(*self.estimators)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: I see the issue - the original line already has `step is not None` check, but it's in the wrong place. Looking more carefully, I notice that the line actually already has the correct check `step is not None` but it's positioned incorrectly. Let me re-read the original code more carefully. Actually, let me revert and look at the original code again to understand what went wrong:\n\n```bash\ngit show HEAD:./sklearn/ensemble/voting.py | sed -n '80,85p'\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-ed390904411642b79d37c75185612e87",
+          "created": 1760301795,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: I see the issue - the original line already has `step is not None` check, but it's in the wrong place. Looking more carefully, I notice that the line actually already has the correct check `step is not None` but it's positioned incorrectly. Let me re-read the original code more carefully. Actually, let me revert and look at the original code again to understand what went wrong:\n\n```bash\ngit show HEAD:./sklearn/ensemble/voting.py | sed -n '80,85p'\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 122,
+            "prompt_tokens": 6110,
+            "total_tokens": 6232,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n            for name, step in self.estimators:\n                if not has_fit_parameter(step, 'sample_weight'):\n                    raise ValueError('Underlying estimator \\'%s\\' does not'\n                                     ' support sample weights.' % name)\n\n        names, clfs = zip(*self.estimators)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Ah, I see the issue now. The original code didn't have the `step is not None` check at all! My previous sed command must have been incorrect. Let me revert the file to original state and apply the correct fix:\n\n```bash\ngit checkout ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-c26a68af7f244b4892d920e9da8d0f20",
+          "created": 1760301810,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Ah, I see the issue now. The original code didn't have the `step is not None` check at all! My previous sed command must have been incorrect. Let me revert the file to original state and apply the correct fix:\n\n```bash\ngit checkout ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 76,
+            "prompt_tokens": 6313,
+            "total_tokens": 6389,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nUpdated 1 path from the index\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me apply the correct fix - adding the None check before calling has_fit_parameter:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, '\\''sample_weight'\\''):/if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-92dee009cb294dc28c98949f77898b69",
+          "created": 1760301822,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me apply the correct fix - adding the None check before calling has_fit_parameter:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, '\\''sample_weight'\\''):/if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 84,
+            "prompt_tokens": 6421,
+            "total_tokens": 6505,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nsed: -e expression #1, char 122: unterminated `s' command\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me try a different approach with a clearer sed command:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, '\\''sample_weight'\\''):/if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-db7ce96e658e464d8b18aa7b46de126a",
+          "created": 1760301845,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me try a different approach with a clearer sed command:\n\n```bash\nsed -i '81s/if not has_fit_parameter(step, '\\''sample_weight'\\''):/if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 78,
+            "prompt_tokens": 6550,
+            "total_tokens": 6628,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nsed: -e expression #1, char 122: unterminated `s' command\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me try a simpler approach by replacing the entire line:\n\n```bash\nsed -i '81c\\                if step is not None and not has_fit_parameter(step, \"sample_weight\"):\\n                    raise ValueError(\\'Underlying estimator \\'\\''%s\\'\\'' does not support sample weights.\\' % name)' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-afd69ee1541a48a08e4a6cd1c9e88150",
+          "created": 1760301865,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me try a simpler approach by replacing the entire line:\n\n```bash\nsed -i '81c\\                if step is not None and not has_fit_parameter(step, \"sample_weight\"):\\n                    raise ValueError(\\'Underlying estimator \\'\\''%s\\'\\'' does not support sample weights.\\' % name)' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 90,
+            "prompt_tokens": 6673,
+            "total_tokens": 6763,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>2</returncode>\n<output>\nbash: -c: line 1: syntax error near unexpected token `)'\nbash: -c: line 1: `sed -i '81c\\                if step is not None and not has_fit_parameter(step, \"sample_weight\"):\\n                    raise ValueError(\\'Underlying estimator \\'\\''%s\\'\\'' does not support sample weights.\\' % name)' ./sklearn/ensemble/voting.py'\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me just manually edit the file using a different approach. First, let me see the exact line content:\n\n```bash\nawk 'NR==81 {print NR \": \" $0}' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-2b9b0ba115c6453aa8ad9d6494c47d12",
+          "created": 1760301890,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me just manually edit the file using a different approach. First, let me see the exact line content:\n\n```bash\nawk 'NR==81 {print NR \": \" $0}' ./sklearn/ensemble/voting.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 62,
+            "prompt_tokens": 6874,
+            "total_tokens": 6936,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n81:                 if not has_fit_parameter(step, 'sample_weight'):\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me use a different approach to modify the file. I'll create a small Python script to make the change:\n\n```bash\npython -c \"\nimport re\nwith open('./sklearn/ensemble/voting.py', 'r') as f:\n    content = f.read()\n\n# Find and replace the problematic line\ncontent = re.sub(\n    r'(\\s*if not has_fit_parameter\\(step, '\\''sample_weight'\\''\\):)',\n    r'\\1\\n                if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):',\n    content,\n    count=1\n)\n\n# Or better yet, replace the exact line\nlines = content.split('\\n')\nlines[80] = '                if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):'\ncontent = '\\n'.join(lines)\n\nwith open('./sklearn/ensemble/voting.py', 'w') as f:\n    f.write(content)\n\"\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-f1907b4a33c940f3b9653b18c0898918",
+          "created": 1760301903,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me use a different approach to modify the file. I'll create a small Python script to make the change:\n\n```bash\npython -c \"\nimport re\nwith open('./sklearn/ensemble/voting.py', 'r') as f:\n    content = f.read()\n\n# Find and replace the problematic line\ncontent = re.sub(\n    r'(\\s*if not has_fit_parameter\\(step, '\\''sample_weight'\\''\\):)',\n    r'\\1\\n                if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):',\n    content,\n    count=1\n)\n\n# Or better yet, replace the exact line\nlines = content.split('\\n')\nlines[80] = '                if step is not None and not has_fit_parameter(step, '\\''sample_weight'\\''):'\ncontent = '\\n'.join(lines)\n\nwith open('./sklearn/ensemble/voting.py', 'w') as f:\n    f.write(content)\n\"\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 214,
+            "prompt_tokens": 6975,
+            "total_tokens": 7189,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\n  File \"<string>\", line 8\n    r'(\\s*if not has_fit_parameter\\(step, '\\''sample_weight'\\''\\):)',\n                                                                    ^\nSyntaxError: unexpected character after line continuation character\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me just do a simple manual replacement by reading the file and writing it back with the fix:\n\n```bash\npython -c \"\nwith open('./sklearn/ensemble/voting.py', 'r') as f:\n    lines = f.readlines()\n\n# Fix line 81 (0-indexed is 80)\nlines[80] = '                if step is not None and not has_fit_parameter(step, \\\"sample_weight\\\"):\\n'\n\nwith open('./sklearn/ensemble/voting.py', 'w') as f:\n    f.writelines(lines)\n\"\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-4b41abdfaf7d44eeac37c9657ddfcfc9",
+          "created": 1760301924,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me just do a simple manual replacement by reading the file and writing it back with the fix:\n\n```bash\npython -c \"\nwith open('./sklearn/ensemble/voting.py', 'r') as f:\n    lines = f.readlines()\n\n# Fix line 81 (0-indexed is 80)\nlines[80] = '                if step is not None and not has_fit_parameter(step, \\\"sample_weight\\\"):\\n'\n\nwith open('./sklearn/ensemble/voting.py', 'w') as f:\n    f.writelines(lines)\n\"\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 130,
+            "prompt_tokens": 7256,
+            "total_tokens": 7386,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me test if the fix works:\n\n```bash\ncd /testbed && python test_issue.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-8b2a79a1bf5f40c6b9c3ff72f158ca2d",
+          "created": 1760301938,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me test if the fix works:\n\n```bash\ncd /testbed && python test_issue.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 36,
+            "prompt_tokens": 7410,
+            "total_tokens": 7446,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\nFirst fit successful\nSet lr to None\nSecond fit successful\n/testbed/sklearn/linear_model/logistic.py:432: FutureWarning: Default solver will be changed to 'lbfgs' in 0.22. Specify a solver to silence this warning.\n  FutureWarning)\n/testbed/sklearn/linear_model/logistic.py:469: FutureWarning: Default multi_class will be changed to 'auto' in 0.22. Specify the multi_class option to silence this warning.\n  \"this warning.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Excellent! The fix works. Now let me create a more comprehensive test to make sure I haven't broken anything and that edge cases work properly:\n\n```bash\ncat <<'EOF' > comprehensive_test.py\nfrom sklearn.datasets import load_iris\nfrom sklearn.ensemble import VotingClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\nprint(\"=== Testing VotingClassifier with None estimators ===\")\n\n# Test 1: Original issue case\nprint(\"Test 1: Original issue case\")\nX, y = load_iris(return_X_y=True)\nvoter = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint(\"First fit successful\")\n\nvoter.set_params(lr=None)\nprint(\"Set lr to None\")\ntry:\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"SUCCESS: Second fit with None estimator and sample_weight worked!\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\n# Test 2: All estimators None\nprint(\"\\nTest 2: All estimators None\")\ntry:\n    voter.set_params(rf=None)\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"UNEXPECTED: Should have failed with all None estimators\")\nexcept ValueError as e:\n    print(f\"SUCCESS: Correctly caught error: {e}\")\nexcept Exception as e:\n    print(f\"UNEXPECTED ERROR: {type(e).__name__}: {e}\")\n\n# Test 3: No sample weights\nprint(\"\\nTest 3: No sample weights with None estimator\")\ntry:\n    voter.set_params(rf=None)\n    voter.fit(X, y)  # No sample_weight\n    print(\"SUCCESS: Fit without sample weights worked!\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\n# Test 4: Normal operation without None estimators\nprint(\"\\nTest 4: Normal operation\")\nvoter2 = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\ntry:\n    voter2.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"SUCCESS: Normal operation works\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\nprint(\"\\n=== All tests completed ===\")\nEOF\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-994015963c0f4a179766e93b788320fb",
+          "created": 1760301949,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Excellent! The fix works. Now let me create a more comprehensive test to make sure I haven't broken anything and that edge cases work properly:\n\n```bash\ncat <<'EOF' > comprehensive_test.py\nfrom sklearn.datasets import load_iris\nfrom sklearn.ensemble import VotingClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\nprint(\"=== Testing VotingClassifier with None estimators ===\")\n\n# Test 1: Original issue case\nprint(\"Test 1: Original issue case\")\nX, y = load_iris(return_X_y=True)\nvoter = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint(\"First fit successful\")\n\nvoter.set_params(lr=None)\nprint(\"Set lr to None\")\ntry:\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"SUCCESS: Second fit with None estimator and sample_weight worked!\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\n# Test 2: All estimators None\nprint(\"\\nTest 2: All estimators None\")\ntry:\n    voter.set_params(rf=None)\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"UNEXPECTED: Should have failed with all None estimators\")\nexcept ValueError as e:\n    print(f\"SUCCESS: Correctly caught error: {e}\")\nexcept Exception as e:\n    print(f\"UNEXPECTED ERROR: {type(e).__name__}: {e}\")\n\n# Test 3: No sample weights\nprint(\"\\nTest 3: No sample weights with None estimator\")\ntry:\n    voter.set_params(rf=None)\n    voter.fit(X, y)  # No sample_weight\n    print(\"SUCCESS: Fit without sample weights worked!\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\n# Test 4: Normal operation without None estimators\nprint(\"\\nTest 4: Normal operation\")\nvoter2 = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\ntry:\n    voter2.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"SUCCESS: Normal operation works\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\nprint(\"\\n=== All tests completed ===\")\nEOF\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 534,
+            "prompt_tokens": 7736,
+            "total_tokens": 8270,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Now let me run the comprehensive test to make sure everything works correctly:\n\n```bash\ncd /testbed && python comprehensive_test.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-868bd81d73a04413b7815ec04530df71",
+          "created": 1760301968,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Now let me run the comprehensive test to make sure everything works correctly:\n\n```bash\ncd /testbed && python comprehensive_test.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 41,
+            "prompt_tokens": 8294,
+            "total_tokens": 8335,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n/testbed/sklearn/linear_model/logistic.py:432: FutureWarning: Default solver will be changed to 'lbfgs' in 0.22. Specify a solver to silence this warning.\n  FutureWarning)\n/testbed/sklearn/linear_model/logistic.py:469: FutureWarning: Default multi_class will be changed to 'auto' in 0.22. Specify the multi_class option to silence this warning.\n  \"this warning.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n/testbed/sklearn/linear_model/logistic.py:432: FutureWarning: Default solver will be changed to 'lbfgs' in 0.22. Specify a solver to silence this warning.\n  FutureWarning)\n/testbed/sklearn/linear_model/logistic.py:469: FutureWarning: Default multi_class will be changed to 'auto' in 0.22. Specify the multi_class option to silence this warning.\n  \"this warning.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n=== Testing VotingClassifier with None estimators ===\nTest 1: Original issue case\nFirst fit successful\nSet lr to None\nSUCCESS: Second fit with None estimator and sample_weight worked!\n\nTest 2: All estimators None\nSUCCESS: Correctly caught error: All estimators are None. At least one is required!\n\nTest 3: No sample weights with None estimator\nFAILED: ValueError: All estimators are None. At least one is required!\n\nTest 4: Normal operation\nSUCCESS: Normal operation works\n\n=== All tests completed ===\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Almost perfect! Test 3 failed as expected because when both estimators are set to None, it's a legitimate error case. But the main issue from the PR description is fixed. Let me also test the VotingRegressor to make sure it doesn't have the same issue:\n\n```bash\ncat <<'EOF' > test_regressor.py\nfrom sklearn.datasets import make_regression\nfrom sklearn.ensemble import VotingRegressor\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.ensemble import RandomForestRegressor\nimport numpy as np\n\nprint(\"=== Testing VotingRegressor with None estimators ===\")\n\n# Test the same scenario with VotingRegressor\nX, y = make_regression(n_samples=100, n_features=1, noise=0.1, random_state=42)\nvoter = VotingRegressor(\n    estimators=[('lr', LinearRegression()),\n                ('rf', RandomForestRegressor())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint(\"First fit successful\")\n\nvoter.set_params(lr=None)\nprint(\"Set lr to None\")\ntry:\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"SUCCESS: VotingRegressor with None estimator and sample_weight worked!\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\nprint(\"=== Test completed ===\")\nEOF\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-d4cc70f88f8c4d668e18574b01830ee5",
+          "created": 1760302048,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Almost perfect! Test 3 failed as expected because when both estimators are set to None, it's a legitimate error case. But the main issue from the PR description is fixed. Let me also test the VotingRegressor to make sure it doesn't have the same issue:\n\n```bash\ncat <<'EOF' > test_regressor.py\nfrom sklearn.datasets import make_regression\nfrom sklearn.ensemble import VotingRegressor\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.ensemble import RandomForestRegressor\nimport numpy as np\n\nprint(\"=== Testing VotingRegressor with None estimators ===\")\n\n# Test the same scenario with VotingRegressor\nX, y = make_regression(n_samples=100, n_features=1, noise=0.1, random_state=42)\nvoter = VotingRegressor(\n    estimators=[('lr', LinearRegression()),\n                ('rf', RandomForestRegressor())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint(\"First fit successful\")\n\nvoter.set_params(lr=None)\nprint(\"Set lr to None\")\ntry:\n    voter.fit(X, y, sample_weight=np.ones(y.shape))\n    print(\"SUCCESS: VotingRegressor with None estimator and sample_weight worked!\")\nexcept Exception as e:\n    print(f\"FAILED: {type(e).__name__}: {e}\")\n\nprint(\"=== Test completed ===\")\nEOF\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 290,
+            "prompt_tokens": 8903,
+            "total_tokens": 9193,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me run the VotingRegressor test to make sure it also works:\n\n```bash\ncd /testbed && python test_regressor.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-fa82eb8f99a64d83b5840c21abdb62d2",
+          "created": 1760302064,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me run the VotingRegressor test to make sure it also works:\n\n```bash\ncd /testbed && python test_regressor.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 42,
+            "prompt_tokens": 9217,
+            "total_tokens": 9259,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n=== Testing VotingRegressor with None estimators ===\nFirst fit successful\nSet lr to None\nSUCCESS: VotingRegressor with None estimator and sample_weight worked!\n=== Test completed ===\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Perfect! Both VotingClassifier and VotingRegressor now work correctly with the fix. Let me also run the existing tests to make sure I haven't broken anything:\n\n```bash\ncd /testbed && python -m pytest sklearn/ensemble/tests/test_voting.py -v\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-ecfb9eff7eb94359a381935fcacf2696",
+          "created": 1760302097,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Perfect! Both VotingClassifier and VotingRegressor now work correctly with the fix. Let me also run the existing tests to make sure I haven't broken anything:\n\n```bash\ncd /testbed && python -m pytest sklearn/ensemble/tests/test_voting.py -v\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 68,
+            "prompt_tokens": 9469,
+            "total_tokens": 9537,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n============================= test session starts ==============================\nplatform linux -- Python 3.6.13, pytest-6.2.4, py-1.11.0, pluggy-0.13.1 -- /opt/miniconda3/envs/testbed/bin/python\ncachedir: .pytest_cache\nrootdir: /testbed, configfile: setup.cfg\ncollecting ... collected 18 items\n\nsklearn/ensemble/tests/test_voting.py::test_estimator_init PASSED        [  5%]\nsklearn/ensemble/tests/test_voting.py::test_predictproba_hardvoting PASSED [ 11%]\nsklearn/ensemble/tests/test_voting.py::test_notfitted PASSED             [ 16%]\nsklearn/ensemble/tests/test_voting.py::test_majority_label_iris PASSED   [ 22%]\nsklearn/ensemble/tests/test_voting.py::test_tie_situation PASSED         [ 27%]\nsklearn/ensemble/tests/test_voting.py::test_weights_iris PASSED          [ 33%]\nsklearn/ensemble/tests/test_voting.py::test_weights_regressor PASSED     [ 38%]\nsklearn/ensemble/tests/test_voting.py::test_predict_on_toy_problem PASSED [ 44%]\nsklearn/ensemble/tests/test_voting.py::test_predict_proba_on_toy_problem PASSED [ 50%]\nsklearn/ensemble/tests/test_voting.py::test_multilabel PASSED            [ 55%]\nsklearn/ensemble/tests/test_voting.py::test_gridsearch PASSED            [ 61%]\nsklearn/ensemble/tests/test_voting.py::test_parallel_fit PASSED          [ 66%]\nsklearn/ensemble/tests/test_voting.py::test_sample_weight PASSED         [ 72%]\nsklearn/ensemble/tests/test_voting.py::test_sample_weight_kwargs PASSED  [ 77%]\nsklearn/ensemble/tests/test_voting.py::test_set_params PASSED            [ 83%]\nsklearn/ensemble/tests/test_voting.py::test_set_estimator_none PASSED    [ 88%]\nsklearn/ensemble/tests/test_voting.py::test_estimator_weights_format PASSED [ 94%]\nsklearn/ensemble/tests/test_voting.py::test_transform PASSED             [100%]\n\n======================== 18 passed, 1 warning in 1.59s =========================\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Excellent! All existing tests pass. Let me also verify that my fix is exactly what was needed by reviewing the change I made:\n\n```bash\ngit diff\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-ce57656606fc4e7ca4ec38fc2ad9a5ab",
+          "created": 1760302128,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Excellent! All existing tests pass. Let me also verify that my fix is exactly what was needed by reviewing the change I made:\n\n```bash\ngit diff\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 46,
+            "prompt_tokens": 10083,
+            "total_tokens": 10129,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\ndiff --git a/sklearn/ensemble/voting.py b/sklearn/ensemble/voting.py\nindex 7afa7180c..3d253b0fc 100644\n--- a/sklearn/ensemble/voting.py\n+++ b/sklearn/ensemble/voting.py\n@@ -78,7 +78,7 @@ class _BaseVoting(_BaseComposition, TransformerMixin):\n \n         if sample_weight is not None:\n             for name, step in self.estimators:\n-                if not has_fit_parameter(step, 'sample_weight'):\n+                if step is not None and not has_fit_parameter(step, \"sample_weight\"):\n                     raise ValueError('Underlying estimator \\'%s\\' does not'\n                                      ' support sample weights.' % name)\n \n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Perfect! My fix is exactly what was needed. I added the check `step is not None and` before the `has_fit_parameter` call to prevent calling `has_fit_parameter` on None estimators. This resolves the AttributeError that was occurring when trying to fit a VotingClassifier with sample_weight when one of the estimators was set to None.\n\nThe fix ensures that:\n1. Only non-None estimators are checked for sample weight support\n2. The existing functionality remains intact for valid estimators\n3. All existing tests continue to pass\n4. The specific issue described in the PR is resolved\n\nLet me clean up the test files I created:\n\n```bash\nrm /testbed/test_issue.py /testbed/comprehensive_test.py /testbed/test_regressor.py\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-f514e141f4d442d294d7e1377cd17fa1",
+          "created": 1760302144,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Perfect! My fix is exactly what was needed. I added the check `step is not None and` before the `has_fit_parameter` call to prevent calling `has_fit_parameter` on None estimators. This resolves the AttributeError that was occurring when trying to fit a VotingClassifier with sample_weight when one of the estimators was set to None.\n\nThe fix ensures that:\n1. Only non-None estimators are checked for sample weight support\n2. The existing functionality remains intact for valid estimators\n3. All existing tests continue to pass\n4. The specific issue described in the PR is resolved\n\nLet me clean up the test files I created:\n\n```bash\nrm /testbed/test_issue.py /testbed/comprehensive_test.py /testbed/test_regressor.py\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 172,
+            "prompt_tokens": 10321,
+            "total_tokens": 10493,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "THOUGHT: Let me also run one final verification to make sure the exact code from the issue description works:\n\n```bash\ncd /testbed && python -c \"\nfrom sklearn.datasets import load_iris\nfrom sklearn.ensemble import VotingClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\nX, y = load_iris(return_X_y=True)\nvoter = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nvoter.set_params(lr=None)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint('SUCCESS: The exact code from the issue now works!')\n\"\n```\n</output>\n</format_example>",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-5ce967f6b4474925b5dafb13cc6ee25b",
+          "created": 1760302166,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "THOUGHT: Let me also run one final verification to make sure the exact code from the issue description works:\n\n```bash\ncd /testbed && python -c \"\nfrom sklearn.datasets import load_iris\nfrom sklearn.ensemble import VotingClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport numpy as np\n\nX, y = load_iris(return_X_y=True)\nvoter = VotingClassifier(\n    estimators=[('lr', LogisticRegression()),\n                ('rf', RandomForestClassifier())]\n)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nvoter.set_params(lr=None)\nvoter.fit(X, y, sample_weight=np.ones(y.shape))\nprint('SUCCESS: The exact code from the issue now works!')\n\"\n```\n</output>\n</format_example>",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 168,
+            "prompt_tokens": 10517,
+            "total_tokens": 10685,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n/testbed/sklearn/linear_model/logistic.py:432: FutureWarning: Default solver will be changed to 'lbfgs' in 0.22. Specify a solver to silence this warning.\n  FutureWarning)\n/testbed/sklearn/linear_model/logistic.py:469: FutureWarning: Default multi_class will be changed to 'auto' in 0.22. Specify the multi_class option to silence this warning.\n  \"this warning.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\n/testbed/sklearn/ensemble/forest.py:245: FutureWarning: The default value of n_estimators will change from 10 in version 0.20 to 100 in 0.22.\n  \"10 in version 0.20 to 100 in 0.22.\", FutureWarning)\nSUCCESS: The exact code from the issue now works!\n</output>"
+    },
+    {
+      "role": "assistant",
+      "content": "```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+      "extra": {
+        "response": {
+          "id": "chatcmpl-4c6016cd7e094d8eafc49931995da01b",
+          "created": 1760302186,
+          "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              },
+              "provider_specific_fields": {
+                "stop_reason": null,
+                "token_ids": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 24,
+            "prompt_tokens": 10973,
+            "total_tokens": 10997,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": null
+          },
+          "service_tier": null,
+          "prompt_logprobs": null,
+          "prompt_token_ids": null,
+          "kv_transfer_params": null
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "diff --git a/sklearn/ensemble/voting.py b/sklearn/ensemble/voting.py\nindex 7afa7180c..3d253b0fc 100644\n--- a/sklearn/ensemble/voting.py\n+++ b/sklearn/ensemble/voting.py\n@@ -78,7 +78,7 @@ class _BaseVoting(_BaseComposition, TransformerMixin):\n \n         if sample_weight is not None:\n             for name, step in self.estimators:\n-                if not has_fit_parameter(step, 'sample_weight'):\n+                if step is not None and not has_fit_parameter(step, \"sample_weight\"):\n                     raise ValueError('Underlying estimator \\'%s\\' does not'\n                                      ' support sample weights.' % name)\n \n"
+    }
+  ],
+  "trajectory_format": "mini-swe-agent-1",
+  "instance_id": "scikit-learn__scikit-learn-13779"
+}
